@@ -2,13 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+/// <summary>
+/// 游戏界面
+/// </summary>
 public class GamePanel : MonoBehaviour
 {
     private static GamePanel instance;
     public static GamePanel Instance => instance;
     private GamePanel() { }
 
+    //分数
     public Text txtScore;
 
     private void Awake()
@@ -29,6 +32,9 @@ public class GamePanel : MonoBehaviour
         
     }
 
+    /// <summary>
+    /// 更新分数
+    /// </summary>
     public void UpdateScore()
     {
         txtScore.text = (int.Parse(txtScore.text) + 1).ToString();

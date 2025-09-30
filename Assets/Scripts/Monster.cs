@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
+/// <summary>
+/// 怪物状态枚举
+/// </summary>
 public enum State
 {
     Idle, 
@@ -11,59 +14,92 @@ public enum State
     Atk
 }
 
-
+/// <summary>
+/// 怪物类
+/// </summary>
 public class Monster : MonoBehaviour
 {
+    //巡逻点1
     public Transform pos1;
+    //巡逻点2
     public Transform pos2;
+    //玩家
     public GameObject player;
-
+    //怪物血量
     private int hp = 5;
+    //怪物移动方向
     [SerializeField]
     private Vector3 dir;
+    //怪物移动速度
     private float speed = 2f;
+    //怪物控制器
     private CharacterController controller;
+    //待机时间
     private float time;
+    //目标位置
+    [SerializeField]
     private Vector3 targetCurrent;
+    //怪物状态
     private State state;
+    //攻击间隔时间
     private const float cdTime = 2f;
+    //攻击间隔计时
     private float cTime;
-    private float atkRange = 2f;
+    //攻击范围
+    private float atkRange = 0.8f;
+    //动画状态机
+    private Animator animator;
+
+    private float targetSpeed;
+    private float nowSpeed;
+    private float changeSpeed = 5f;
     // Start is called before the first frame update
     void Start()
     {
         controller = GetComponent<CharacterController>();
         targetCurrent = pos1.position;
+        animator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        switch(state)
+        controller.Move(Vector3.down * Time.deltaTime);
+        switch (state)
         {
+            //待机
             case State.Idle:
                 Idle();
                 break;
+            //巡逻
             case State.Patrol:
                 Patrol();
                 break;
+            //索敌
             case State.Chase:
                 Chase();
                 break;
+            //返回
             case State.Return:
                 Return();
                 break;
+            //攻击
             case State.Atk:
                 Atk();
                 break;
         }
     }
 
+    /// <summary>
+    /// 受伤
+    /// </summary>
     public void Wound()
     {
+        //血量-1
         hp--;
         if (hp <= 0)
         {
+            //死亡销毁并更新分数
             Destroy(gameObject);
             GamePanel.Instance.UpdateScore();
         }
@@ -74,20 +110,32 @@ public class Monster : MonoBehaviour
     /// </summary>
     public void Idle()
     {
-        if (Vector3.Angle(transform.forward, player.transform.position - transform.position) < 150f
+        //玩家在怪物索敌范围切换索敌状态
+        if (Vector3.Angle(transform.forward, player.transform.position - transform.position) < 60f
                 && Vector3.Distance(transform.position, player.transform.position) < 5f)
         {
             print("待机索敌");
+            //待机时间设为0
             time = 0;
             
             state = State.Chase;
             return;
         }
+        //待机计时
         print("开始待机");
         time += Time.deltaTime;
+
+        //速度变化平滑
+        targetSpeed = 0;
+        nowSpeed = Mathf.Lerp(nowSpeed, targetSpeed, Time.deltaTime * changeSpeed);
+        if (Mathf.Abs(targetSpeed - nowSpeed) < 0.1f) nowSpeed = targetSpeed;
+        //播放移动动画
+        animator.SetFloat("Speed", nowSpeed);
+
         if (time >= 2f)
         {
             print("待机结束");
+            //待机结束，切换巡逻状态
             if (targetCurrent == pos1.position)
             {
                 targetCurrent = pos2.position;
@@ -115,7 +163,8 @@ public class Monster : MonoBehaviour
     /// </summary>
     public void Patrol()
     {
-        if (Vector3.Angle(transform.forward, player.transform.position - transform.position) < 150f
+        //玩家在怪物索敌范围切换索敌状态
+        if (Vector3.Angle(transform.forward, player.transform.position - transform.position) < 60f
                 && Vector3.Distance(transform.position, player.transform.position) < 5f)
         {
             print("巡逻索敌");
@@ -124,16 +173,23 @@ public class Monster : MonoBehaviour
             state = State.Chase;
             return;
         }
+        //到达巡逻点切换待机状态
         if (Vector3.Distance(transform.position, targetCurrent) < 0.2f)
         {
-            print("距离判断");
             state = State.Idle;
             return;
         }
         
-
         print("巡逻");
-        controller.Move(dir * speed * Time.deltaTime);
+        //速度变化平滑
+        targetSpeed = speed;
+        nowSpeed = Mathf.Lerp(nowSpeed, targetSpeed, Time.deltaTime * changeSpeed);
+        if (Mathf.Abs(targetSpeed - nowSpeed) < 0.1f) nowSpeed = targetSpeed;
+        //播放移动动画
+        animator.SetFloat("Speed", nowSpeed);
+        //巡逻
+        controller.Move(dir * nowSpeed * Time.deltaTime);
+
     }
 
     /// <summary>
@@ -141,16 +197,30 @@ public class Monster : MonoBehaviour
     /// </summary>
     public void Chase()
     {
-        transform.LookAt(player.transform.position + new Vector3(0, transform.position.y, 0));
+        //看向玩家
+        transform.LookAt(player.transform.position);
+        //将目标设为玩家
         targetCurrent = player.transform.position;
+        //移动方向
         dir = (targetCurrent - transform.position).normalized;
-        controller.Move(dir * speed * Time.deltaTime);
+
+        //速度变化平滑
+        targetSpeed = speed;
+        nowSpeed = Mathf.Lerp(nowSpeed, targetSpeed, Time.deltaTime * changeSpeed);
+        if (Mathf.Abs(targetSpeed - nowSpeed) < 0.1f) nowSpeed = targetSpeed;
+        //播放移动动画
+        animator.SetFloat("Speed", nowSpeed);
+
+        //向玩家移动
+        controller.Move(dir * nowSpeed * Time.deltaTime);
+        //玩家远离索敌范围返回巡逻点，切换返回状态
         if (Vector3.Distance(transform.position, targetCurrent) > 10f)
         {
             print("回去");
             state = State.Return;
             return;
         }
+        //玩家进入怪物攻击范围，切换攻击状态
         if (Vector3.Distance(transform.position, targetCurrent) < atkRange)
         {
             state = State.Atk;
@@ -162,10 +232,15 @@ public class Monster : MonoBehaviour
     /// </summary>
     public void Return()
     {
+        //得到最近的巡逻点位置
         targetCurrent = Vector3.Distance(transform.position, pos1.position) > Vector3.Distance(transform.position, pos2.position) ? pos2.position : pos1.position;
+        //移动方向
         dir = (targetCurrent - transform.position).normalized;
+        //看向目标巡逻点
         transform.LookAt(targetCurrent);
+        //移动
         controller.Move(dir * speed * Time.deltaTime);
+        //到达巡逻点切换待机状态
         if (Vector3.Distance(transform.position, targetCurrent) < 0.2f)
         {
             state = State.Idle;
@@ -178,14 +253,23 @@ public class Monster : MonoBehaviour
     /// </summary>
     public void Atk()
     {
+        //玩家脱离怪物攻击范围，切换索敌状态，恢复攻击冷却时间
         if (Vector3.Distance(transform.position, targetCurrent) > atkRange)
         {
             state = State.Chase;
             cTime = 0;
             return;
         }
-        if (cTime == 0) 
-            print("攻击");
+
+        //攻击不在冷却时间，进行攻击
+        if (cTime == 0)
+        {
+            print("怪物攻击");
+            animator.SetFloat("Speed", 0);
+            animator.SetTrigger("isAtk");
+        }
+            
+        //攻击冷却计时，时间一到切换索敌状态
         cTime += Time.deltaTime;
         if (cTime >= cdTime) 
         {
@@ -194,4 +278,38 @@ public class Monster : MonoBehaviour
         }
     }
 
+
+    /// <summary>
+    /// 攻击球形检测
+    /// </summary>
+    public void AtkEvent()
+    {
+        //攻击检测玩家
+        if (Physics.SphereCast(transform.position + Vector3.up * 1.3f + transform.right * 0.5f,
+                                0.1f,
+                                transform.forward,
+                                out RaycastHit hit,
+                                0.8f,
+                                1 << LayerMask.NameToLayer("Player"),
+                                QueryTriggerInteraction.Ignore))
+        {
+            Player p = hit.collider.gameObject.GetComponent<Player>();
+            //打到玩家，玩家掉血
+            if (p != null)
+            {
+                p.Wound();
+            }
+
+        }
+    }
+
+    /// <summary>
+    /// 辅助绘制
+    /// </summary>
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.forward * 0.8f + transform.right * 0.5f, 0.1f);
+        Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.right * 0.5f, 0.1f);
+    }
 }
