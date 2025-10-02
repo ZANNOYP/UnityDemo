@@ -26,7 +26,10 @@ public class Monster : MonoBehaviour
     //玩家
     public GameObject player;
     //怪物血量
-    private int hp = 5;
+    [SerializeField]
+    private int hp;
+    private int maxHp = 3;
+
     //怪物移动方向
     [SerializeField]
     private Vector3 dir;
@@ -40,6 +43,7 @@ public class Monster : MonoBehaviour
     [SerializeField]
     private Vector3 targetCurrent;
     //怪物状态
+    [SerializeField]
     private State state;
     //攻击间隔时间
     private const float cdTime = 2f;
@@ -49,16 +53,20 @@ public class Monster : MonoBehaviour
     private float atkRange = 0.8f;
     //动画状态机
     private Animator animator;
-
+    //目标移动速度
     private float targetSpeed;
+    //当前移动速度
     private float nowSpeed;
+    //移动加速度
     private float changeSpeed = 5f;
     // Start is called before the first frame update
     void Start()
     {
+        state = State.Idle;
         controller = GetComponent<CharacterController>();
         targetCurrent = pos1.position;
         animator = GetComponent<Animator>();
+        hp = maxHp;
     }
 
     // Update is called once per frame
@@ -97,12 +105,43 @@ public class Monster : MonoBehaviour
     {
         //血量-1
         hp--;
+        //游戏界面更新血条
+        GamePanel.Instance.UpdateMonsterHp(hp,maxHp);
         if (hp <= 0)
         {
-            //死亡销毁并更新分数
-            Destroy(gameObject);
-            GamePanel.Instance.UpdateScore();
+            //死亡
+            Dead();
+
         }
+    }
+
+    /// <summary>
+    /// 死亡播放动画
+    /// </summary>
+    public void Dead()
+    {
+        animator.SetTrigger("isDead");
+    }
+
+    /// <summary>
+    /// 死亡动画播放完毕等待1秒销毁自己
+    /// </summary>
+    public void DeadEvent()
+    {
+        //销毁自己
+        Destroy(gameObject, 1f);
+        
+    }
+
+    /// <summary>
+    /// 死亡生成血包更新分数
+    /// </summary>
+    private void OnDestroy()
+    {
+        //生成血包
+        Instantiate(Resources.Load<GameObject>("Heart"), transform.position + Vector3.up * 0.5f, Quaternion.identity);
+        //游戏界面更新分数
+        GamePanel.Instance.UpdateScore();
     }
 
     /// <summary>
@@ -114,7 +153,6 @@ public class Monster : MonoBehaviour
         if (Vector3.Angle(transform.forward, player.transform.position - transform.position) < 60f
                 && Vector3.Distance(transform.position, player.transform.position) < 5f)
         {
-            print("待机索敌");
             //待机时间设为0
             time = 0;
             
@@ -122,7 +160,6 @@ public class Monster : MonoBehaviour
             return;
         }
         //待机计时
-        print("开始待机");
         time += Time.deltaTime;
 
         //速度变化平滑
@@ -134,7 +171,6 @@ public class Monster : MonoBehaviour
 
         if (time >= 2f)
         {
-            print("待机结束");
             //待机结束，切换巡逻状态
             if (targetCurrent == pos1.position)
             {
@@ -167,9 +203,6 @@ public class Monster : MonoBehaviour
         if (Vector3.Angle(transform.forward, player.transform.position - transform.position) < 60f
                 && Vector3.Distance(transform.position, player.transform.position) < 5f)
         {
-            print("巡逻索敌");
-            
-            
             state = State.Chase;
             return;
         }
@@ -180,7 +213,6 @@ public class Monster : MonoBehaviour
             return;
         }
         
-        print("巡逻");
         //速度变化平滑
         targetSpeed = speed;
         nowSpeed = Mathf.Lerp(nowSpeed, targetSpeed, Time.deltaTime * changeSpeed);
@@ -198,9 +230,9 @@ public class Monster : MonoBehaviour
     public void Chase()
     {
         //看向玩家
-        transform.LookAt(player.transform.position);
+        transform.LookAt(new Vector3(player.transform.position.x, transform.position.y, player.transform.position.z));
         //将目标设为玩家
-        targetCurrent = player.transform.position;
+        targetCurrent = new Vector3(player.transform.position.x, transform.position.y, player.transform.position.z);
         //移动方向
         dir = (targetCurrent - transform.position).normalized;
 
@@ -216,7 +248,6 @@ public class Monster : MonoBehaviour
         //玩家远离索敌范围返回巡逻点，切换返回状态
         if (Vector3.Distance(transform.position, targetCurrent) > 10f)
         {
-            print("回去");
             state = State.Return;
             return;
         }
@@ -264,7 +295,6 @@ public class Monster : MonoBehaviour
         //攻击不在冷却时间，进行攻击
         if (cTime == 0)
         {
-            print("怪物攻击");
             animator.SetFloat("Speed", 0);
             animator.SetTrigger("isAtk");
         }
@@ -285,7 +315,7 @@ public class Monster : MonoBehaviour
     public void AtkEvent()
     {
         //攻击检测玩家
-        if (Physics.SphereCast(transform.position + Vector3.up * 1.3f + transform.right * 0.5f,
+        if (Physics.SphereCast(transform.position + Vector3.up * 1.3f ,
                                 0.1f,
                                 transform.forward,
                                 out RaycastHit hit,
@@ -309,7 +339,7 @@ public class Monster : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.forward * 0.8f + transform.right * 0.5f, 0.1f);
-        Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.right * 0.5f, 0.1f);
+        Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.forward * 0.8f , 0.1f);
+        Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f , 0.1f);
     }
 }

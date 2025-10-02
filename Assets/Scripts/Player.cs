@@ -57,14 +57,18 @@ public class Player : MonoBehaviour
     private float nowYspeed;
     //玩家状态
     public statePlayer state;
+    //玩家血量
     [SerializeField]
     private int hp;
+
+    private int maxHp = 5;
 
     // Start is called before the first frame update
     void Start()
     {
         controller = GetComponent<CharacterController>();
         state = statePlayer.Idle;
+        hp = maxHp;
     }
 
     // Update is called once per frame
@@ -281,15 +285,30 @@ public class Player : MonoBehaviour
         state = statePlayer.Idle;
     }
 
+    /// <summary>
+    /// 受伤
+    /// </summary>
     public void Wound()
     {
         //血量-1
         hp--;
+        //游戏界面更新血条
+        GamePanel.Instance.UpdatePlayerHp(hp, maxHp);
         if (hp <= 0)
         {
             //Application.Quit();
             UnityEditor.EditorApplication.isPlaying = false;
         }
+    }
+
+    /// <summary>
+    /// 回血
+    /// </summary>
+    public void AddHp()
+    {
+        hp = maxHp;
+        GamePanel.Instance.UpdatePlayerHp(hp, maxHp);
+        print("玩家回血");
     }
 
     /// <summary>
@@ -299,8 +318,6 @@ public class Player : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(foot.position, checkSphereRadius);
-        //Gizmos.DrawLine(transform.position + Vector3.up, transform.position + Vector3.up + transform.forward * 1f);
-        //Gizmos.DrawLine(transform.position + Vector3.up, transform.position + Vector3.up + transform.forward * 2f);
         Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.forward * 0.8f + transform.right * 0.5f, 0.1f);
         Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.right * 0.5f, 0.1f);
     }
