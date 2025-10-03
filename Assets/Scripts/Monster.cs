@@ -11,7 +11,8 @@ public enum State
     Patrol, 
     Chase, 
     Return,
-    Atk
+    Atk,
+    Dead
 }
 
 /// <summary>
@@ -34,7 +35,7 @@ public class Monster : MonoBehaviour
     [SerializeField]
     private Vector3 dir;
     //怪物移动速度
-    private float speed = 2f;
+    private float speed = 3f;
     //怪物控制器
     private CharacterController controller;
     //待机时间
@@ -95,6 +96,10 @@ public class Monster : MonoBehaviour
             case State.Atk:
                 Atk();
                 break;
+            //攻击
+            case State.Dead:
+                Dead();
+                break;
         }
     }
 
@@ -110,7 +115,7 @@ public class Monster : MonoBehaviour
         if (hp <= 0)
         {
             //死亡
-            Dead();
+            state = State.Dead;
 
         }
     }
@@ -130,19 +135,13 @@ public class Monster : MonoBehaviour
     {
         //销毁自己
         Destroy(gameObject, 1f);
-        
-    }
-
-    /// <summary>
-    /// 死亡生成血包更新分数
-    /// </summary>
-    private void OnDestroy()
-    {
-        //生成血包
-        Instantiate(Resources.Load<GameObject>("Heart"), transform.position + Vector3.up * 0.5f, Quaternion.identity);
         //游戏界面更新分数
         GamePanel.Instance.UpdateScore();
+        //生成血包
+        Instantiate(Resources.Load<GameObject>("Heart"), transform.position + Vector3.up * 0.5f - transform.forward * 0.5f + transform.right, Quaternion.identity);
+        Instantiate(Resources.Load<GameObject>("Key"), transform.position + Vector3.up * 0.5f- Vector3.forward * 0.5f - transform.right, Quaternion.identity);
     }
+
 
     /// <summary>
     /// 待机

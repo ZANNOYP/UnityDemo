@@ -30,6 +30,8 @@ public class GamePanel : MonoBehaviour
     [SerializeField]
     private Vector3 localPos;
 
+    public Button btnPause;
+
     
 
     private void Awake()
@@ -42,7 +44,11 @@ public class GamePanel : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        btnPause.onClick.AddListener(() =>
+        {
+            PausePanel.Instance.gameObject.SetActive(true);
+            Time.timeScale = 0;
+        });
     }
 
     // Update is called once per frame

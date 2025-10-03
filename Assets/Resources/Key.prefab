@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 590988909967988255}
   - component: {fileID: 4583616435940055482}
   - component: {fileID: 1763354507100138864}
-  - component: {fileID: 1571730628113929307}
   - component: {fileID: 9053217890987219298}
+  - component: {fileID: 5650993598184793337}
   m_Layer: 0
   m_Name: Key
   m_TagString: Untagged
@@ -85,32 +85,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &1571730628113929307
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 250035424563956901}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 845c415f3181b4840ab566c40e714752, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isRotating: 1
-  rotateX: 0
-  rotateY: 1
-  rotateZ: 0
-  rotationSpeed: 85.67
-  isFloating: 1
-  useEasingForFloating: 1
-  floatHeight: 0.3
-  floatSpeed: 0.4
-  startScale: {x: 0.5, y: 0.5, z: 0.5}
-  endScale: {x: 0.8, y: 0.8, z: 0.8}
-  isScaling: 1
-  useEasingForScaling: 1
-  scaleLerpSpeed: 1.11
 --- !u!135 &9053217890987219298
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -132,3 +106,16 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 1.78
   m_Center: {x: -0.1, y: -0.98, z: -0.0000012218952}
+--- !u!114 &5650993598184793337
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 250035424563956901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d66a2f08f8dc7f34cbc386ec0d4d0f99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  roundSpeed: 100

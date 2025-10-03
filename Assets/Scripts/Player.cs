@@ -63,6 +63,8 @@ public class Player : MonoBehaviour
 
     private int maxHp = 5;
 
+    public Door[] doors;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -278,7 +280,7 @@ public class Player : MonoBehaviour
             Door d = hit.collider.gameObject.GetComponent<Door>();
             print(d.gameObject.name);
             //如果得到门脚本且门没开则打开门
-            if (d != null && !d.isOpen) 
+            if (d != null && !d.isOpen && !d.isLock) 
                 d.OpenDoor();
         }
         //检测一次人物返回待机状态
@@ -297,7 +299,10 @@ public class Player : MonoBehaviour
         if (hp <= 0)
         {
             //Application.Quit();
-            UnityEditor.EditorApplication.isPlaying = false;
+            //UnityEditor.EditorApplication.isPlaying = false;
+            TipPanel.Instance.UpdateTip("玩家死亡");
+            TipPanel.Instance.gameObject.SetActive(true);
+            Time.timeScale = 0;
         }
     }
 

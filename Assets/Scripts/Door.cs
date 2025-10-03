@@ -6,12 +6,14 @@ using UnityEngine;
 /// </summary>
 public class Door : MonoBehaviour
 {
-    //门状态
+    //门开关状态
     public bool isOpen;
+    //门锁状态
+    public bool isLock;
     // Start is called before the first frame update
     void Start()
     {
-        
+        isLock = true;
     }
 
     // Update is called once per frame
@@ -25,5 +27,10 @@ public class Door : MonoBehaviour
         //开门，改变门状态
         transform.parent.Rotate(0, -90, 0);
         isOpen = true;
+    }
+
+    public void UnLock()
+    {
+        isLock = false;
     }
 }
