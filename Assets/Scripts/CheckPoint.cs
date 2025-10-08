@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class CheckPoint : MonoBehaviour
 {
+    public UnityAction actionPass;
     // Start is called before the first frame update
     void Start()
     {
@@ -22,9 +24,11 @@ public class CheckPoint : MonoBehaviour
             Player p = other.gameObject.GetComponent<Player>();
             if (p != null)
             {
-                TipPanel.Instance.UpdateTip("¹§Ï²¹ý¹Ø");
-                TipPanel.Instance.gameObject.SetActive(true);
+                actionPass?.Invoke();
+                
                 Time.timeScale = 0;
+                Cursor.lockState = CursorLockMode.None;
+                
             }
         }
     }

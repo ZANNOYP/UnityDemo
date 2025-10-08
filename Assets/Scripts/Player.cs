@@ -1,8 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.PackageManager;
-using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
+using UnityEngine.Events;
 /// <summary>
 /// 玩家状态枚举
 /// </summary>
@@ -64,6 +64,10 @@ public class Player : MonoBehaviour
     private int maxHp = 5;
 
     public Door[] doors;
+
+    public UnityAction<int, int> actionAddHp;
+    public UnityAction<int, int> actionWound;
+    public UnityAction actionDead;
 
     // Start is called before the first frame update
     void Start()
@@ -295,15 +299,25 @@ public class Player : MonoBehaviour
         //血量-1
         hp--;
         //游戏界面更新血条
-        GamePanel.Instance.UpdatePlayerHp(hp, maxHp);
+        actionWound?.Invoke(hp, maxHp);
         if (hp <= 0)
         {
-            //Application.Quit();
-            //UnityEditor.EditorApplication.isPlaying = false;
-            TipPanel.Instance.UpdateTip("玩家死亡");
-            TipPanel.Instance.gameObject.SetActive(true);
-            Time.timeScale = 0;
+            Dead();
+            
         }
+    }
+
+    /// <summary>
+    /// 死亡
+    /// </summary>
+    public void Dead()
+    {
+        //时间暂停
+        Time.timeScale = 0;
+        //鼠标解锁
+        Cursor.lockState = CursorLockMode.None;
+        //面板更新
+        actionDead?.Invoke();
     }
 
     /// <summary>
@@ -312,8 +326,8 @@ public class Player : MonoBehaviour
     public void AddHp()
     {
         hp = maxHp;
-        GamePanel.Instance.UpdatePlayerHp(hp, maxHp);
-        print("玩家回血");
+        //血条更新
+        actionAddHp?.Invoke(hp, maxHp);
     }
 
     /// <summary>

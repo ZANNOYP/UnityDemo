@@ -30,25 +30,35 @@ public class GamePanel : MonoBehaviour
     [SerializeField]
     private Vector3 localPos;
 
-    public Button btnPause;
+    //游戏是否暂停
+    public static bool isPause = false;
+    //游戏是否结束
+    public static bool isOver;
 
-    
+    public Player player;
+    public Monster monster;
+    public CheckPoint checkPoint;
 
     private void Awake()
     {
         instance = this;
         txtScore.text = DataMgr.Instance.LoadScore().ToString();
         sliderMonsterHp.gameObject.SetActive(false);
+        isOver = false;
+        player.actionAddHp += UpdatePlayerHp;
+        player.actionWound += UpdatePlayerHp;
+        player.actionDead += Pass;
+        monster.actionWound += UpdateMonsterHp;
+        monster.actionDead += UpdateScore;
+        checkPoint.actionPass += Pass;
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        btnPause.onClick.AddListener(() =>
-        {
-            PausePanel.Instance.gameObject.SetActive(true);
-            Time.timeScale = 0;
-        });
+        
+        Cursor.lockState = CursorLockMode.Locked;
+
     }
 
     // Update is called once per frame
@@ -62,6 +72,15 @@ public class GamePanel : MonoBehaviour
             localPos.y = localPos.y * 1080 / Screen.height;
 
             (sliderMonsterHp.transform as RectTransform).localPosition = localPos;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape) && !isPause && !isOver) 
+        {
+            isPause = true;
+            PausePanel.Instance.gameObject.SetActive(true);
+            Time.timeScale = 0;
+            Cursor.lockState = CursorLockMode.None;
+
         }
         
     }
@@ -95,6 +114,14 @@ public class GamePanel : MonoBehaviour
     {
         ShowMonsterHp();
         sliderMonsterHp.value = (float)hp / maxHp;
+    }
+
+    /// <summary>
+    /// 通关或失败
+    /// </summary>
+    public void Pass()
+    {
+        isOver = true;
     }
 
     /// <summary>

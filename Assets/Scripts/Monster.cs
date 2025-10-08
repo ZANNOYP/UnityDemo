@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem.XR;
 /// <summary>
 /// 怪物状态枚举
@@ -60,6 +61,9 @@ public class Monster : MonoBehaviour
     private float nowSpeed;
     //移动加速度
     private float changeSpeed = 5f;
+
+    public UnityAction<int, int> actionWound;
+    public UnityAction actionDead;
     // Start is called before the first frame update
     void Start()
     {
@@ -111,7 +115,7 @@ public class Monster : MonoBehaviour
         //血量-1
         hp--;
         //游戏界面更新血条
-        GamePanel.Instance.UpdateMonsterHp(hp,maxHp);
+        actionWound?.Invoke(hp, maxHp);
         if (hp <= 0)
         {
             //死亡
@@ -136,7 +140,7 @@ public class Monster : MonoBehaviour
         //销毁自己
         Destroy(gameObject, 1f);
         //游戏界面更新分数
-        GamePanel.Instance.UpdateScore();
+        actionDead?.Invoke();
         //生成血包
         Instantiate(Resources.Load<GameObject>("Heart"), transform.position + Vector3.up * 0.5f - transform.forward * 0.5f + transform.right, Quaternion.identity);
         Instantiate(Resources.Load<GameObject>("Key"), transform.position + Vector3.up * 0.5f- Vector3.forward * 0.5f - transform.right, Quaternion.identity);

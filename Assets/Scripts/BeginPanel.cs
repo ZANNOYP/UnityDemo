@@ -17,6 +17,7 @@ public class BeginPanel : MonoBehaviour
     {
         Time.timeScale = 1;
         instance = this;
+        Cursor.lockState = CursorLockMode.None;
     }
     // Start is called before the first frame update
     void Start()
@@ -27,7 +28,12 @@ public class BeginPanel : MonoBehaviour
         });
         btnQuit.onClick.AddListener(() =>
         {
+#if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+
         });
     }
 

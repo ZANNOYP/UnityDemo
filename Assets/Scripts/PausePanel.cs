@@ -22,6 +22,8 @@ public class PausePanel : MonoBehaviour
         {
             Time.timeScale = 1;
             this.gameObject.SetActive(false);
+            Cursor.lockState = CursorLockMode.Locked;
+            GamePanel.isPause = false;
         });
         this.gameObject.SetActive(false);
     }
