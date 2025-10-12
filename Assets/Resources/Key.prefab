@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1763354507100138864}
   - component: {fileID: 9053217890987219298}
   - component: {fileID: 5650993598184793337}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Key
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -119,3 +119,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roundSpeed: 100
+  player: {fileID: 0}

@@ -8,12 +8,12 @@ using UnityEngine.InputSystem.XR;
 /// </summary>
 public enum State
 {
-    Idle, 
-    Patrol, 
-    Chase, 
-    Return,
-    Atk,
-    Dead
+    Idle,//待机 
+    Patrol, //巡逻
+    Chase, //索敌
+    Return,//返回
+    Atk,//攻击
+    Dead,//死亡
 }
 
 /// <summary>
@@ -61,9 +61,13 @@ public class Monster : MonoBehaviour
     private float nowSpeed;
     //移动加速度
     private float changeSpeed = 5f;
-
+    //受伤委托
     public UnityAction<int, int> actionWound;
+    //死亡委托
     public UnityAction actionDead;
+    //绑定的门
+    public Door door;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -143,7 +147,10 @@ public class Monster : MonoBehaviour
         actionDead?.Invoke();
         //生成血包
         Instantiate(Resources.Load<GameObject>("Heart"), transform.position + Vector3.up * 0.5f - transform.forward * 0.5f + transform.right, Quaternion.identity);
-        Instantiate(Resources.Load<GameObject>("Key"), transform.position + Vector3.up * 0.5f- Vector3.forward * 0.5f - transform.right, Quaternion.identity);
+        //生成钥匙
+        Key k = Instantiate(Resources.Load<GameObject>("Key"), transform.position + Vector3.up * 0.5f - Vector3.forward * 0.5f - transform.right, Quaternion.identity).GetComponent<Key>();
+        //将钥匙与门绑定
+        k.door = this.door;
     }
 
 

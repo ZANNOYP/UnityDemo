@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 /// <summary>
 /// 游戏界面
@@ -30,33 +31,44 @@ public class GamePanel : MonoBehaviour
     [SerializeField]
     private Vector3 localPos;
 
-    //游戏是否暂停
-    public static bool isPause = false;
     //游戏是否结束
     public static bool isOver;
-
+    //玩家
     public Player player;
+    //怪物
     public Monster monster;
+    //通关点
     public CheckPoint checkPoint;
+    //暂停委托
+    public UnityAction actionPause;
 
     private void Awake()
     {
         instance = this;
+        //加载分数
         txtScore.text = DataMgr.Instance.LoadScore().ToString();
+        //隐藏怪物血条
         sliderMonsterHp.gameObject.SetActive(false);
+        //默认未通关
         isOver = false;
+        //注册玩家回血
         player.actionAddHp += UpdatePlayerHp;
+        //注册玩家受伤
         player.actionWound += UpdatePlayerHp;
+        //注册玩家死亡
         player.actionDead += Pass;
+        //注册怪物受伤
         monster.actionWound += UpdateMonsterHp;
+        //注册怪物死亡
         monster.actionDead += UpdateScore;
+        //注册通关
         checkPoint.actionPass += Pass;
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        //鼠标锁定
         Cursor.lockState = CursorLockMode.Locked;
 
     }
@@ -73,11 +85,11 @@ public class GamePanel : MonoBehaviour
 
             (sliderMonsterHp.transform as RectTransform).localPosition = localPos;
         }
-
-        if (Input.GetKeyDown(KeyCode.Escape) && !isPause && !isOver) 
+        //暂停面板
+        if (Input.GetKeyDown(KeyCode.Escape) && player.canControl && !isOver) 
         {
-            isPause = true;
-            PausePanel.Instance.gameObject.SetActive(true);
+            player.canControl = false;
+            actionPause?.Invoke();
             Time.timeScale = 0;
             Cursor.lockState = CursorLockMode.None;
 

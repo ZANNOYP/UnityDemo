@@ -21,14 +21,18 @@ public class Door : MonoBehaviour
     {
 
     }
-
+    /// <summary>
+    /// 开门
+    /// </summary>
     public void OpenDoor()
     {
         //开门，改变门状态
         transform.parent.Rotate(0, -90, 0);
         isOpen = true;
     }
-
+    /// <summary>
+    /// 解锁
+    /// </summary>
     public void UnLock()
     {
         isLock = false;

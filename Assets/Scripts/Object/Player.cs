@@ -12,7 +12,7 @@ public enum statePlayer
     Move,//移动
     Jump,//跳跃
     Atk,//攻击
-    OpenDoor,//开门
+    Interaction,//交互
 }
 
 /// <summary>
@@ -60,20 +60,40 @@ public class Player : MonoBehaviour
     //玩家血量
     [SerializeField]
     private int hp;
-
+    //玩家最大血量
     private int maxHp = 5;
-
+    //门
     public Door[] doors;
-
+    //加血委托
     public UnityAction<int, int> actionAddHp;
+    //受伤委托
     public UnityAction<int, int> actionWound;
+    //死亡委托
     public UnityAction actionDead;
+    //交互显示委托
+    public UnityAction<string> actionInteraction;
+    //交互隐藏委托
+    public UnityAction actionInteraction2;
+    //开门提示委托
+    public UnityAction<Door> actionOpendoorTip;
+    //拾取提示委托
+    public UnityAction<Key> actionPick;
+
+    //交互文本信息
+    public string interaction;
+    //角色能否攻击、互动，防止关闭面板时角色自动攻击一下
+    public bool canControl;
 
     // Start is called before the first frame update
     void Start()
     {
+        //角色默认可攻击与互动
+        canControl = true;
+        //角色控制器
         controller = GetComponent<CharacterController>();
+        //默认状态为待机
         state = statePlayer.Idle;
+        //出生满血
         hp = maxHp;
     }
 
@@ -98,9 +118,9 @@ public class Player : MonoBehaviour
             case statePlayer.Atk:
                 Atk();
                 break;
-            //开门
-            case statePlayer.OpenDoor:
-                OpenDoor(); 
+            //交互
+            case statePlayer.Interaction:
+                Interaction(); 
                 break;
         }
 
@@ -120,14 +140,14 @@ public class Player : MonoBehaviour
         //y轴速度改为-1贴紧地面
         nowYspeed = -1;
         controller.Move(Vector3.up * nowYspeed * Time.deltaTime);
-        //E键切换开门状态
-        if (Input.GetKeyDown(KeyCode.E))
+        //E键切换交互状态
+        if (canControl && Input.GetKeyDown(KeyCode.E)) 
         {
-            state = statePlayer.OpenDoor;
+            state = statePlayer.Interaction;
             return;
         }
         //左键切换攻击状态
-        if (Input.GetMouseButtonDown(0))
+        if (canControl && Input.GetMouseButtonDown(0)) 
         {
             state = statePlayer.Atk;
             return;
@@ -157,14 +177,14 @@ public class Player : MonoBehaviour
         //得到移动方向
         move = Quaternion.Euler(0, CameraController.yaw, 0) * new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
         move = move.magnitude > 1 ? move.normalized : move;
-        //E键切换开门状态
-        if (Input.GetKeyDown(KeyCode.E))
+        //E键切换交互状态
+        if (canControl && Input.GetKeyDown(KeyCode.E))
         {
-            state = statePlayer.OpenDoor;
+            state = statePlayer.Interaction;
             return;
         }
         //左键切换攻击状态
-        if (Input.GetMouseButtonDown(0))
+        if (canControl && Input.GetMouseButtonDown(0)) 
         {
             state = statePlayer.Atk;
             return;
@@ -189,8 +209,10 @@ public class Player : MonoBehaviour
         //改变当前移动速度
         nowSpeed = Mathf.Lerp(nowSpeed, targetSpeed, Time.deltaTime * changeSpeed);
         if (Mathf.Abs(targetSpeed - nowSpeed) < 0.1f) nowSpeed = targetSpeed;
+        //保证移动时角色贴地
+        nowYspeed = -1;
         //角色移动
-        controller.Move(move * nowSpeed * Time.deltaTime);
+        controller.Move((Vector3.up * nowYspeed + move * nowSpeed) * Time.deltaTime);
         //播放移动动画
         animator.SetFloat("Speed", nowSpeed);
         
@@ -273,23 +295,42 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// 开门
+    /// 交互
     /// </summary>
-    public void OpenDoor()
+    public void Interaction()
     {
         //人物面前射线检测
-        Ray ray = new Ray(transform.position + Vector3.up, transform.forward);
+        Ray ray = new Ray(transform.position + Vector3.up * 0.5f, transform.forward * 0.5f);
+        //开门相关
         if (Physics.Raycast(ray, out RaycastHit hit, 2f, 1 << LayerMask.NameToLayer("Door"), QueryTriggerInteraction.Ignore))
         {
+            //得到门脚本
             Door d = hit.collider.gameObject.GetComponent<Door>();
-            print(d.gameObject.name);
-            //如果得到门脚本且门没开则打开门
-            if (d != null && !d.isOpen && !d.isLock) 
-                d.OpenDoor();
+            //打开开门提示面板
+            actionOpendoorTip?.Invoke(d);
+            //时间暂停
+            Time.timeScale = 0;
+            //鼠标解锁
+            Cursor.lockState = CursorLockMode.None;
+        }
+        //拾取钥匙相关
+        //得到钥匙对象
+        Collider[] colliders = Physics.OverlapSphere(transform.position + Vector3.up * 0.5f + transform.forward * 0.5f, 0.5f, 1 << LayerMask.NameToLayer("Key"), QueryTriggerInteraction.Collide);
+        foreach (Collider collider in colliders)
+        {
+            //得到钥匙脚本
+            Key k = collider.gameObject.GetComponent<Key>();
+            //打开拾取提示面板
+            actionPick?.Invoke(k);
+            //时间暂停
+            Time.timeScale = 0;
+            //鼠标解锁
+            Cursor.lockState = CursorLockMode.None;
         }
         //检测一次人物返回待机状态
         state = statePlayer.Idle;
     }
+
 
     /// <summary>
     /// 受伤
@@ -300,6 +341,7 @@ public class Player : MonoBehaviour
         hp--;
         //游戏界面更新血条
         actionWound?.Invoke(hp, maxHp);
+        //hp小于0角色死亡
         if (hp <= 0)
         {
             Dead();
@@ -316,7 +358,7 @@ public class Player : MonoBehaviour
         Time.timeScale = 0;
         //鼠标解锁
         Cursor.lockState = CursorLockMode.None;
-        //面板更新
+        //开启结算面板
         actionDead?.Invoke();
     }
 
@@ -330,6 +372,43 @@ public class Player : MonoBehaviour
         actionAddHp?.Invoke(hp, maxHp);
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        //触发器进入检测门
+        Door door = other.gameObject.GetComponent<Door>();
+        if (other.gameObject.layer == LayerMask.NameToLayer("Door") && !door.isOpen) 
+        {
+            //交互提示信息
+            interaction = "E开门";
+            //交互面板显示
+            actionInteraction?.Invoke(interaction);
+        }
+        //触发器进入检测钥匙
+        if (other.gameObject.layer == LayerMask.NameToLayer("Key"))
+        {
+            //交互提示信息
+            interaction = "E拾取";
+            //交互面板显示
+            actionInteraction?.Invoke(interaction);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        //触发器离开检测门
+        if (other.gameObject.layer == LayerMask.NameToLayer("Door"))
+        {
+            //交互面板隐藏
+            actionInteraction2?.Invoke();
+        }
+        //触发器离开检测钥匙
+        if (other.gameObject.layer == LayerMask.NameToLayer("Key"))
+        {
+            //交互面板隐藏
+            actionInteraction2?.Invoke();
+        }
+    }
+
     /// <summary>
     /// 辅助绘制
     /// </summary>
@@ -339,5 +418,6 @@ public class Player : MonoBehaviour
         Gizmos.DrawSphere(foot.position, checkSphereRadius);
         Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.forward * 0.8f + transform.right * 0.5f, 0.1f);
         Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.right * 0.5f, 0.1f);
+        Gizmos.DrawLine(transform.position + Vector3.up * 0.5f, transform.position + Vector3.up * 0.5f + transform.forward * 0.5f);
     }
 }
