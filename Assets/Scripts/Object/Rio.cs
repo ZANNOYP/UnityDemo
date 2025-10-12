@@ -23,9 +23,10 @@ public class Rio : MonoBehaviour
     /// </summary>
     public void AtkOver()
     {
-        //玩家状态转为待机，层级权重改为0
+        //玩家状态转为待机
         player.state = statePlayer.Idle;
-        player.animator.SetLayerWeight(1, 0);
+        //改为不在攻击
+        player.isAtk = false;
     }
 
     /// <summary>
@@ -33,23 +34,45 @@ public class Rio : MonoBehaviour
     /// </summary>
     public void AtkEvent()
     {
-        //攻击检测怪物
-        if (Physics.SphereCast(player.gameObject.transform.position + Vector3.up * 1.3f + player.gameObject.transform.right * 0.5f, 
-                                0.1f, 
-                                player.gameObject.transform.forward, 
-                                out RaycastHit hit, 
-                                0.8f, 
-                                1 << LayerMask.NameToLayer("Monster"), 
-                                QueryTriggerInteraction.Ignore)) 
+        switch (player.atkType)
         {
-            Monster m = hit.collider.gameObject.GetComponent<Monster>();
-            //打到怪物，怪物掉血
-            if (m != null)
-            {
-                m.Wound();
-                print("攻击成功");
-            }
-                
+            case AtkType.Riot:
+                //攻击检测怪物
+                if (Physics.SphereCast(player.gameObject.transform.position + Vector3.up * 1.3f + player.gameObject.transform.right * 0.5f,
+                                        0.1f,
+                                        player.gameObject.transform.forward,
+                                        out RaycastHit hit,
+                                        0.8f,
+                                        1 << LayerMask.NameToLayer("Monster"),
+                                        QueryTriggerInteraction.Ignore))
+                {
+                    Monster m = hit.collider.gameObject.GetComponent<Monster>();
+                    //打到怪物，怪物掉血
+                    if (m != null)
+                    {
+                        m.Wound();
+                        print("攻击成功");
+                    }
+
+                }
+                break;
+            case AtkType.ShortSword:
+                Collider[] colliders = Physics.OverlapSphere(player.transform.position + Vector3.up + player.transform.forward * 0.5f, 0.5f, 1 << LayerMask.NameToLayer("Monster"), QueryTriggerInteraction.Collide);
+                foreach (Collider collider in colliders)
+                {
+                    //得到钥匙脚本
+                    Monster m = collider.gameObject.GetComponent<Monster>();
+                    //打到怪物，怪物掉血
+                    if (m != null)
+                    {
+                        m.Wound();
+                        print("攻击成功");
+                    }
+                }
+                break;
+            default:
+                break;
         }
+        
     }
 }

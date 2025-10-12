@@ -14,6 +14,15 @@ public enum statePlayer
     Atk,//攻击
     Interaction,//交互
 }
+/// <summary>
+/// 玩家攻击类型
+/// </summary>
+public enum AtkType
+{
+    Riot,//拳击
+    ShortSword,//短剑
+}
+
 
 /// <summary>
 /// 玩家类
@@ -76,17 +85,26 @@ public class Player : MonoBehaviour
     public UnityAction actionInteraction2;
     //开门提示委托
     public UnityAction<Door> actionOpendoorTip;
-    //拾取提示委托
-    public UnityAction<Key> actionPick;
+    //拾取钥匙提示委托
+    public UnityAction<Key> actionPickKey;
+    //拾取武器提示委托
+    public UnityAction<Weapon> actionPickWeapon;
 
     //交互文本信息
     public string interaction;
     //角色能否攻击、互动，防止关闭面板时角色自动攻击一下
     public bool canControl;
+    //角色正在攻击
+    public bool isAtk;
+    //角色攻击类型
+    public AtkType atkType;
 
     // Start is called before the first frame update
     void Start()
     {
+        atkType = AtkType.Riot;
+        //默认不在攻击
+        isAtk = false;
         //角色默认可攻击与互动
         canControl = true;
         //角色控制器
@@ -285,13 +303,28 @@ public class Player : MonoBehaviour
     /// </summary>
     public void Atk()
     {
-        //攻击状态下攻击层级权重为0时，将权重改为1，播放攻击动画，停止播放移动动画
-        if (animator.GetLayerWeight(1) == 0)
+        //不在攻击状态时进行攻击
+        if (!isAtk)
         {
-            animator.SetLayerWeight(1, 1);
+            switch (atkType)
+            {
+                case AtkType.Riot:
+                    animator.SetLayerWeight(1, 0);
+                    break;
+                case AtkType.ShortSword:
+                    animator.SetLayerWeight(1, 1);
+                    break;
+                default:
+                    break;
+            }
+            //攻击状态，水平速度设为0
             animator.SetTrigger("isAtk");
             animator.SetFloat("Speed", 0);
+            //设置为正在攻击状态
+            isAtk = true;
         }
+        
+        
     }
 
     /// <summary>
@@ -321,12 +354,37 @@ public class Player : MonoBehaviour
             //得到钥匙脚本
             Key k = collider.gameObject.GetComponent<Key>();
             //打开拾取提示面板
-            actionPick?.Invoke(k);
-            //时间暂停
-            Time.timeScale = 0;
-            //鼠标解锁
-            Cursor.lockState = CursorLockMode.None;
+            actionPickKey?.Invoke(k);
+            if (k != null)
+            {
+                //时间暂停
+                Time.timeScale = 0;
+                //鼠标解锁
+                Cursor.lockState = CursorLockMode.None;
+            }
+            
+                
         }
+        //拾取武器相关
+        //得到武器对象
+        colliders = Physics.OverlapSphere(transform.position + Vector3.up * 0.5f + transform.forward * 0.5f, 0.5f, 1 << LayerMask.NameToLayer("Weapon"), QueryTriggerInteraction.Collide);
+        foreach (Collider collider in colliders)
+        {
+            //得到武器脚本
+            Weapon w = collider.gameObject.GetComponent<Weapon>();
+            //打开拾取提示面板
+            actionPickWeapon?.Invoke(w);
+            if (w != null)
+            {
+                //时间暂停
+                Time.timeScale = 0;
+                //鼠标解锁
+                Cursor.lockState = CursorLockMode.None;
+            }
+            
+
+        }
+
         //检测一次人物返回待机状态
         state = statePlayer.Idle;
     }
@@ -391,18 +449,22 @@ public class Player : MonoBehaviour
             //交互面板显示
             actionInteraction?.Invoke(interaction);
         }
+        //触发器进入检测武器
+        if (other.gameObject.layer == LayerMask.NameToLayer("Weapon"))
+        {
+            //交互提示信息
+            interaction = "E拾取";
+            //交互面板显示
+            actionInteraction?.Invoke(interaction);
+        }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        //触发器离开检测门
-        if (other.gameObject.layer == LayerMask.NameToLayer("Door"))
-        {
-            //交互面板隐藏
-            actionInteraction2?.Invoke();
-        }
-        //触发器离开检测钥匙
-        if (other.gameObject.layer == LayerMask.NameToLayer("Key"))
+        //触发器离开检测
+        if (other.gameObject.layer == LayerMask.NameToLayer("Door") ||
+            other.gameObject.layer == LayerMask.NameToLayer("Key") ||
+            other.gameObject.layer == LayerMask.NameToLayer("Weapon")) 
         {
             //交互面板隐藏
             actionInteraction2?.Invoke();

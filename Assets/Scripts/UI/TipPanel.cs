@@ -27,6 +27,8 @@ public class TipPanel : MonoBehaviour
     private Door door;
     //交互的钥匙
     private Key k;
+    //交互的武器
+    private Weapon w;
 
     private void Awake()
     {
@@ -40,7 +42,9 @@ public class TipPanel : MonoBehaviour
         //注册暂停
         GamePanel.Instance.actionPause += Pause;
         //注册拾取物品
-        player.actionPick += Pick;
+        player.actionPickKey += PickKey;
+        //注册拾取武器
+        player.actionPickWeapon += PickWeapon;
     }
     // Start is called before the first frame update
     void Start()
@@ -67,6 +71,10 @@ public class TipPanel : MonoBehaviour
                 {
                     k.door.UnLock();
                     Destroy(k.gameObject);
+                }
+                if (txtTip.text == "获得短刀")
+                {
+                    w.WearWeapon();
                 }
             }
             else if (txtBtn.text == "游戏继续")
@@ -146,13 +154,27 @@ public class TipPanel : MonoBehaviour
         gameObject.SetActive(true);
     }
     /// <summary>
-    /// 拾取提示委托
+    /// 拾取钥匙提示委托
     /// </summary>
     /// <param name="k"></param>
-    public void Pick(Key k)
+    public void PickKey(Key k)
     {
         this.k = k;
         UpdateTip("获得钥匙", "确定");
+        //隐藏交互面板
+        player.actionInteraction2?.Invoke();
+        gameObject.SetActive(true);
+        //打开面板时无法攻击与互动
+        player.canControl = false;
+    }
+    /// <summary>
+    /// 拾取武器提示委托
+    /// </summary>
+    /// <param name="w"></param>
+    public void PickWeapon(Weapon w)
+    {
+        this.w = w;
+        UpdateTip("获得短刀", "确定");
         //隐藏交互面板
         player.actionInteraction2?.Invoke();
         gameObject.SetActive(true);
