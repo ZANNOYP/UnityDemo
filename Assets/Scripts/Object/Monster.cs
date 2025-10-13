@@ -333,6 +333,7 @@ public class Monster : MonoBehaviour
                                 1 << LayerMask.NameToLayer("Player"),
                                 QueryTriggerInteraction.Ignore))
         {
+            Instantiate(Resources.Load<GameObject>("Sound/hitSound"));
             Player p = hit.collider.gameObject.GetComponent<Player>();
             //打到玩家，玩家掉血
             if (p != null)
@@ -342,7 +343,13 @@ public class Monster : MonoBehaviour
 
         }
     }
-
+    /// <summary>
+    /// 脚步音效
+    /// </summary>
+    public void FootStepEvent()
+    {
+        //Instantiate(Resources.Load<GameObject>("Sound/footstepSound"));
+    }
     /// <summary>
     /// 辅助绘制
     /// </summary>

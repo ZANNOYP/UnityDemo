@@ -46,27 +46,30 @@ public class Rio : MonoBehaviour
                                         1 << LayerMask.NameToLayer("Monster"),
                                         QueryTriggerInteraction.Ignore))
                 {
+                    Instantiate(Resources.Load<GameObject>("Sound/hitSound"));
                     Monster m = hit.collider.gameObject.GetComponent<Monster>();
                     //打到怪物，怪物掉血
                     if (m != null)
                     {
                         m.Wound();
-                        print("攻击成功");
+                        
                     }
 
                 }
                 break;
             case AtkType.ShortSword:
                 Collider[] colliders = Physics.OverlapSphere(player.transform.position + Vector3.up + player.transform.forward * 0.5f, 0.5f, 1 << LayerMask.NameToLayer("Monster"), QueryTriggerInteraction.Collide);
+                Instantiate(Resources.Load<GameObject>("Sound/swordSound"));
                 foreach (Collider collider in colliders)
                 {
+                    
                     //得到钥匙脚本
                     Monster m = collider.gameObject.GetComponent<Monster>();
                     //打到怪物，怪物掉血
                     if (m != null)
                     {
                         m.Wound();
-                        print("攻击成功");
+                        
                     }
                 }
                 break;
@@ -74,5 +77,14 @@ public class Rio : MonoBehaviour
                 break;
         }
         
+    }
+
+    /// <summary>
+    /// 脚步音效
+    /// </summary>
+    public void FootStepEvent()
+    {
+        Instantiate(Resources.Load<GameObject>("Sound/footstepSound"));
+
     }
 }

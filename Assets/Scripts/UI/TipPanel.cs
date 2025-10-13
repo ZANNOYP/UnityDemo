@@ -18,6 +18,8 @@ public class TipPanel : MonoBehaviour
     public Text txtBtn;
     //按钮
     public Button btnReturn;
+    //设置按钮
+    public Button btnSetting;
 
     //玩家
     public Player player;
@@ -49,9 +51,14 @@ public class TipPanel : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        btnSetting.onClick.AddListener(() =>
+        {
+            Instantiate(Resources.Load<GameObject>("Sound/btnSound"));
+            SettingPanel.Instance.Show();
+        });
         btnReturn.onClick.AddListener(() =>
         {
-
+            Instantiate(Resources.Load<GameObject>("Sound/btnSound"));
             if (txtBtn.text == "返回主菜单")
             {
                 SceneManager.LoadScene("BeginScene");
@@ -79,7 +86,7 @@ public class TipPanel : MonoBehaviour
             }
             else if (txtBtn.text == "游戏继续")
             {
-
+                
             }
             
             Time.timeScale = 1;
@@ -112,6 +119,7 @@ public class TipPanel : MonoBehaviour
     public void PlayerDead()
     {
         UpdateTip("玩家死亡 游戏结束", "返回主菜单");
+        btnSetting.gameObject.SetActive(false);
         gameObject.SetActive(true);
     }
     /// <summary>
@@ -120,6 +128,7 @@ public class TipPanel : MonoBehaviour
     public void Pass()
     {
         UpdateTip("恭喜过关 游戏结束", "返回主菜单");
+        btnSetting.gameObject.SetActive(false);
         gameObject.SetActive(true);
     }
     /// <summary>
@@ -139,6 +148,7 @@ public class TipPanel : MonoBehaviour
         {
             UpdateTip("大门开启", "确定");
         }
+        btnSetting.gameObject.SetActive(false);
         //隐藏交互面板
         player.actionInteraction2?.Invoke();
         gameObject.SetActive(true);
@@ -151,6 +161,7 @@ public class TipPanel : MonoBehaviour
     public void Pause()
     {
         UpdateTip("游戏暂停", "游戏继续");
+        btnSetting.gameObject.SetActive(true);
         gameObject.SetActive(true);
     }
     /// <summary>
@@ -161,6 +172,7 @@ public class TipPanel : MonoBehaviour
     {
         this.k = k;
         UpdateTip("获得钥匙", "确定");
+        btnSetting.gameObject.SetActive(false);
         //隐藏交互面板
         player.actionInteraction2?.Invoke();
         gameObject.SetActive(true);
@@ -175,6 +187,7 @@ public class TipPanel : MonoBehaviour
     {
         this.w = w;
         UpdateTip("获得短刀", "确定");
+        btnSetting.gameObject.SetActive(false);
         //隐藏交互面板
         player.actionInteraction2?.Invoke();
         gameObject.SetActive(true);

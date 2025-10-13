@@ -99,6 +99,8 @@ public class Player : MonoBehaviour
     //½ÇÉ«¹¥»÷ÀàÐÍ
     public AtkType atkType;
 
+    public AudioSource footstep;
+
     // Start is called before the first frame update
     void Start()
     {

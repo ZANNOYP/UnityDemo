@@ -46,7 +46,7 @@ public class GamePanel : MonoBehaviour
     {
         instance = this;
         //加载分数
-        txtScore.text = DataMgr.Instance.LoadScore().ToString();
+        txtScore.text = DataMgr.Instance.score.ToString();
         //隐藏怪物血条
         sliderMonsterHp.gameObject.SetActive(false);
         //默认未通关
@@ -70,7 +70,9 @@ public class GamePanel : MonoBehaviour
     {
         //鼠标锁定
         Cursor.lockState = CursorLockMode.Locked;
-
+        //改变背景音乐
+        MusicMgr.Instance.audioSource.clip = Resources.Load<AudioClip>("Music/celestial-wanderer-i-391268");
+        MusicMgr.Instance.audioSource.Play();
     }
 
     // Update is called once per frame
@@ -94,7 +96,13 @@ public class GamePanel : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
 
         }
-        
+        //按F12清空存档
+        //if (Input.GetKeyDown(KeyCode.T)) 
+        //{
+        //    PlayerPrefs.DeleteAll();
+        //    PlayerPrefs.Save();
+        //    Debug.Log("PlayerPrefs 已清空");
+        //}
     }
 
     /// <summary>

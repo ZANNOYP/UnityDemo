@@ -26,6 +26,8 @@ public class Door : MonoBehaviour
     /// </summary>
     public void OpenDoor()
     {
+        //开门音效
+        Instantiate(Resources.Load<GameObject>("Sound/opendoorSound"));
         //开门，改变门状态
         transform.parent.Rotate(0, -90, 0);
         isOpen = true;
