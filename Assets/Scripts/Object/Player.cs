@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
+using UnityEngine.Video;
 /// <summary>
 /// 玩家状态枚举
 /// </summary>
@@ -33,17 +36,17 @@ public class Player : MonoBehaviour
     public float walkSpeed = 2f;
     public float runSpeed = 5f;
     //玩家转动速度
-    public float roundSpeed = 5f;
+    public float roundSpeed = 10f;
     //玩家动画
     public Animator animator;
     //玩家脚底位置
     public Transform foot;
     //玩家跳跃高度
-    public float jumpHeight = 0.5f;
+    public float jumpHeight = 2f;
     //地面层级
     public LayerMask layerGround;
     //地面检测球体半径
-    public float checkSphereRadius = 0.1f;
+    public float checkSphereRadius = 0.17f;
     //玩家控制器
     private CharacterController controller;
     //玩家移动方向
@@ -73,40 +76,36 @@ public class Player : MonoBehaviour
     private int maxHp = 5;
     //门
     public Door[] doors;
-    //加血委托
-    public UnityAction<int, int> actionAddHp;
-    //受伤委托
-    public UnityAction<int, int> actionWound;
-    //死亡委托
-    public UnityAction actionDead;
-    //交互显示委托
-    public UnityAction<string> actionInteraction;
-    //交互隐藏委托
-    public UnityAction actionInteraction2;
-    //开门提示委托
-    public UnityAction<Door> actionOpendoorTip;
-    //拾取钥匙提示委托
-    public UnityAction<Key> actionPickKey;
-    //拾取武器提示委托
-    public UnityAction<Weapon> actionPickWeapon;
 
-    //交互文本信息
-    public string interaction;
     //角色能否攻击、互动，防止关闭面板时角色自动攻击一下
     public bool canControl;
     //角色正在攻击
-    public bool isAtk;
+    public bool isAtk1;
+    public bool isAtk2;
     //角色攻击类型
     public AtkType atkType;
-
+    //角色上一次攻击类型
+    //private AtkType frontAtkType;
+    //脚步音效
     public AudioSource footstep;
+    //能否连击
+    public bool nextCombo;
+
+    public int atk;
+
+    public bool openDoor;
+
+    public Door door;
 
     // Start is called before the first frame update
     void Start()
     {
+        //初始化攻击类型为拳击
         atkType = AtkType.Riot;
+        //frontAtkType = atkType;
         //默认不在攻击
-        isAtk = false;
+        isAtk1 = false;
+        isAtk2 = false;
         //角色默认可攻击与互动
         canControl = true;
         //角色控制器
@@ -115,6 +114,8 @@ public class Player : MonoBehaviour
         state = statePlayer.Idle;
         //出生满血
         hp = maxHp;
+
+        openDoor = false;
     }
 
     // Update is called once per frame
@@ -305,28 +306,79 @@ public class Player : MonoBehaviour
     /// </summary>
     public void Atk()
     {
-        //不在攻击状态时进行攻击
-        if (!isAtk)
+        //未处于攻击状态时进行攻击
+        if (!isAtk1)
         {
-            switch (atkType)
-            {
-                case AtkType.Riot:
-                    animator.SetLayerWeight(1, 0);
-                    break;
-                case AtkType.ShortSword:
-                    animator.SetLayerWeight(1, 1);
-                    break;
-                default:
-                    break;
-            }
-            //攻击状态，水平速度设为0
-            animator.SetTrigger("isAtk");
-            animator.SetFloat("Speed", 0);
-            //设置为正在攻击状态
-            isAtk = true;
+            StartCombo1();
+            return;
         }
+        //攻击状态时检测攻击输入
+        if (isAtk1 && !isAtk2 && Input.GetMouseButtonDown(0)) 
+        {
+            //记录连击输入
+            nextCombo = true;
+        }
+    }
+
+    /// <summary>
+    /// 第一连击
+    /// </summary>
+    public void StartCombo1()
+    {
+        //变为正在第一段连击状态
+        isAtk1 = true;
+        //玩家切换武器改变攻击类型则改变攻击动画
+        //if (frontAtkType != atkType)
+        //{
+        //    switch (atkType)
+        //    {
+        //        case AtkType.Riot:
+        //            //拳击层
+        //            animator.SetLayerWeight(1, 0);
+        //            break;
+        //        case AtkType.ShortSword:
+        //            //短剑层
+        //            animator.SetLayerWeight(1, 1);
+        //            break;
+        //        default:
+        //            break;
+        //    }
+        //    frontAtkType = atkType;
+        //}
+        //切换动画，水平速度设为0
+        animator.SetBool("isAtk1", isAtk1);
+        animator.SetFloat("Speed", 0);
         
-        
+    }
+
+    /// <summary>
+    /// 第二连击
+    /// </summary>
+    public void StartCombo2()
+    {
+        //变为正在第二段连击状态
+        isAtk2 = true;
+        //if (frontAtkType != atkType)
+        //{
+        //    switch (atkType)
+        //    {
+        //        case AtkType.Riot:
+        //            //拳击层
+        //            animator.SetLayerWeight(1, 0);
+        //            break;
+        //        case AtkType.ShortSword:
+        //            //短剑层
+        //            animator.SetLayerWeight(1, 1);
+        //            break;
+        //        default:
+        //            break;
+        //    }
+        //    frontAtkType = atkType;
+        //}
+        //切换动画，水平速度设为0
+        animator.SetBool("isAtk2", isAtk2);
+        animator.SetFloat("Speed", 0);
+
     }
 
     /// <summary>
@@ -334,63 +386,57 @@ public class Player : MonoBehaviour
     /// </summary>
     public void Interaction()
     {
-        //人物面前射线检测
-        Ray ray = new Ray(transform.position + Vector3.up * 0.5f, transform.forward * 0.5f);
         //开门相关
-        if (Physics.Raycast(ray, out RaycastHit hit, 2f, 1 << LayerMask.NameToLayer("Door"), QueryTriggerInteraction.Ignore))
-        {
-            //得到门脚本
-            Door d = hit.collider.gameObject.GetComponent<Door>();
-            //打开开门提示面板
-            actionOpendoorTip?.Invoke(d);
-            //时间暂停
-            Time.timeScale = 0;
-            //鼠标解锁
-            Cursor.lockState = CursorLockMode.None;
-        }
-        //拾取钥匙相关
-        //得到钥匙对象
-        Collider[] colliders = Physics.OverlapSphere(transform.position + Vector3.up * 0.5f + transform.forward * 0.5f, 0.5f, 1 << LayerMask.NameToLayer("Key"), QueryTriggerInteraction.Collide);
+        Vector3 position = transform.position + Vector3.up * 0.5f + transform.forward * 0.5f;
+        float sphereRadium = 0.4f;
+        LayerMask mask = (1 << LayerMask.NameToLayer("Door")) |
+                         (1 << LayerMask.NameToLayer("Key")) |
+                         (1 << LayerMask.NameToLayer("Weapon")) |
+                         (1 << LayerMask.NameToLayer("Hp"));
+        //得到门对象
+        Collider[] colliders = Physics.OverlapSphere(position, sphereRadium, mask, QueryTriggerInteraction.Collide);
         foreach (Collider collider in colliders)
         {
+            BaseItem item;
+            //得到门脚本
+            Door d = collider.gameObject.GetComponent<Door>();
+            if (d != null) 
+            {
+                UIMgr.Instance.GetPanel<GamePanel>((panel) =>
+                {
+                    panel.PauseStart(true);
+                });
+                Time.timeScale = 0;
+                Cursor.lockState = CursorLockMode.None;
+                canControl = false;
+                UIMgr.Instance.ShowPanel<BagPanel>();
+            }
+
             //得到钥匙脚本
             Key k = collider.gameObject.GetComponent<Key>();
-            //打开拾取提示面板
-            actionPickKey?.Invoke(k);
             if (k != null)
             {
-                //时间暂停
-                Time.timeScale = 0;
-                //鼠标解锁
-                Cursor.lockState = CursorLockMode.None;
+                k.PickUp();
             }
-            
-                
-        }
-        //拾取武器相关
-        //得到武器对象
-        colliders = Physics.OverlapSphere(transform.position + Vector3.up * 0.5f + transform.forward * 0.5f, 0.5f, 1 << LayerMask.NameToLayer("Weapon"), QueryTriggerInteraction.Collide);
-        foreach (Collider collider in colliders)
-        {
+
             //得到武器脚本
             Weapon w = collider.gameObject.GetComponent<Weapon>();
-            //打开拾取提示面板
-            actionPickWeapon?.Invoke(w);
             if (w != null)
             {
-                //时间暂停
-                Time.timeScale = 0;
-                //鼠标解锁
-                Cursor.lockState = CursorLockMode.None;
+                w.PickUp();
             }
-            
 
+            //得到血包脚本
+            Hp h = collider.gameObject.GetComponent<Hp>();
+            if (h != null)
+            {
+                h.PickUp();
+            }
         }
-
+        
         //检测一次人物返回待机状态
         state = statePlayer.Idle;
     }
-
 
     /// <summary>
     /// 受伤
@@ -400,12 +446,11 @@ public class Player : MonoBehaviour
         //血量-1
         hp--;
         //游戏界面更新血条
-        actionWound?.Invoke(hp, maxHp);
-        //hp小于0角色死亡
+        EventCenter.Instance.EventTrigger<float>(E_EventType.E_Player_HpChange, (float)hp / maxHp);
+        //actionWound?.Invoke(hp, maxHp);
         if (hp <= 0)
         {
             Dead();
-            
         }
     }
 
@@ -414,62 +459,101 @@ public class Player : MonoBehaviour
     /// </summary>
     public void Dead()
     {
-        //时间暂停
-        Time.timeScale = 0;
-        //鼠标解锁
-        Cursor.lockState = CursorLockMode.None;
-        //开启结算面板
-        actionDead?.Invoke();
+        InputMgr.Instance.StartOrCloseInputMgr(false);
+        UIMgr.Instance.ShowPanel<TipPanel>(E_UILayer.Middle, (panel) =>
+        {
+            panel.GetControl<TextMeshProUGUI>("txtTip").text = "玩家死亡 游戏结束";
+            panel.GetControl<TextMeshProUGUI>("txtBtn").text = "返回主菜单";
+            panel.GetControl<Button>("btnSetting").gameObject.SetActive(false);
+            panel.GetControl<Button>("btnBag").gameObject.SetActive(false);
+        });
     }
 
     /// <summary>
     /// 回血
     /// </summary>
-    public void AddHp()
+    public void AddHp(int addHp)
     {
-        hp = maxHp;
+        hp += addHp;
+        if (hp > maxHp)
+        {
+            hp = maxHp;
+        }
         //血条更新
-        actionAddHp?.Invoke(hp, maxHp);
+        EventCenter.Instance.EventTrigger<float>(E_EventType.E_Player_HpChange, (float)hp / maxHp);
     }
 
+    /// <summary>
+    /// 加攻击力
+    /// </summary>
+    /// <param name="atk"></param>
+    public void AddAtk(int atk)
+    {
+        this.atk += atk;
+    }
+
+    /// <summary>
+    /// 互动提示开启
+    /// </summary>
+    /// <param name="other">互动物体触发器</param>
     private void OnTriggerEnter(Collider other)
     {
-        //触发器进入检测门
-        Door door = other.gameObject.GetComponent<Door>();
-        if (other.gameObject.layer == LayerMask.NameToLayer("Door") && !door.isOpen) 
+        Vector3 position = transform.position + Vector3.up * 0.5f + transform.forward * 0.5f;
+        float sphereRadium = 0.4f;
+        LayerMask mask = (1 << LayerMask.NameToLayer("Door")) |
+                         (1 << LayerMask.NameToLayer("Key")) |
+                         (1 << LayerMask.NameToLayer("Weapon")) |
+                         (1 << LayerMask.NameToLayer("Hp"));
+        Collider[] colliders = Physics.OverlapSphere(position, sphereRadium, mask, QueryTriggerInteraction.Collide);
+        foreach (Collider collider in colliders)
         {
-            //交互提示信息
-            interaction = "E开门";
-            //交互面板显示
-            actionInteraction?.Invoke(interaction);
-        }
-        //触发器进入检测钥匙
-        if (other.gameObject.layer == LayerMask.NameToLayer("Key"))
-        {
-            //交互提示信息
-            interaction = "E拾取";
-            //交互面板显示
-            actionInteraction?.Invoke(interaction);
-        }
-        //触发器进入检测武器
-        if (other.gameObject.layer == LayerMask.NameToLayer("Weapon"))
-        {
-            //交互提示信息
-            interaction = "E拾取";
-            //交互面板显示
-            actionInteraction?.Invoke(interaction);
+            //得到门脚本
+            Door d = collider.gameObject.GetComponent<Door>();
+            if (d != null && !d.isOpen) 
+            {
+                UIMgr.Instance.ShowPanel<InteractionPanel>(E_UILayer.Bottom, (panel) =>
+                {
+                    panel.GetControl<TextMeshProUGUI>("txtInteraction").text = "E开门";
+                });
+                openDoor = true;
+                door = d;
+            }
+
+            //得到钥匙脚本
+            Key k = collider.gameObject.GetComponent<Key>();
+            //得到武器脚本
+            Weapon w = collider.gameObject.GetComponent<Weapon>();
+            //得到血包脚本
+            Hp h = collider.gameObject.GetComponent<Hp>();
+            if (k != null || w != null || h != null) 
+            {
+                UIMgr.Instance.ShowPanel<InteractionPanel>(E_UILayer.Bottom, (panel) =>
+                {
+                    panel.GetControl<TextMeshProUGUI>("txtInteraction").text = "E拾取";
+                });
+            }
+
+            //VideoPlayer v = collider.gameObject.GetComponent<VideoPlayer>();
+            //if (v != null) 
+            //    v.Play();
         }
     }
 
+    /// <summary>
+    /// 互动提示关闭
+    /// </summary>
+    /// <param name="other">互动物体触发器</param>
     private void OnTriggerExit(Collider other)
     {
         //触发器离开检测
         if (other.gameObject.layer == LayerMask.NameToLayer("Door") ||
             other.gameObject.layer == LayerMask.NameToLayer("Key") ||
-            other.gameObject.layer == LayerMask.NameToLayer("Weapon")) 
+            other.gameObject.layer == LayerMask.NameToLayer("Weapon") ||
+            other.gameObject.layer == LayerMask.NameToLayer("Hp")) 
         {
-            //交互面板隐藏
-            actionInteraction2?.Invoke();
+            UIMgr.Instance.HidePanel<InteractionPanel>();
+            openDoor = false;
+            door = null;
         }
     }
 
@@ -479,9 +563,11 @@ public class Player : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(foot.position, checkSphereRadius);
-        Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.forward * 0.8f + transform.right * 0.5f, 0.1f);
-        Gizmos.DrawSphere(transform.position + Vector3.up * 1.3f + transform.right * 0.5f, 0.1f);
+        //Gizmos.DrawSphere(foot.position, checkSphereRadius);
+        //Gizmos.DrawSphere(transform.position + Vector3.up * 1.1f + transform.forward * 0.7f + transform.right * 0.2f, 0.4f);
         Gizmos.DrawLine(transform.position + Vector3.up * 0.5f, transform.position + Vector3.up * 0.5f + transform.forward * 0.5f);
+        //Gizmos.DrawSphere(transform.position + Vector3.up * 1.25f + transform.forward * 1f, 0.5f);
+        Gizmos.DrawSphere(transform.position + Vector3.up * 0.5f + transform.forward * 0.5f, 0.4f);
+
     }
 }

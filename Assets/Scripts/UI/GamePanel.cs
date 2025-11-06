@@ -1,68 +1,46 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 /// <summary>
 /// 游戏界面
 /// </summary>
-public class GamePanel : MonoBehaviour
+public class GamePanel : BasePanel
 {
-    private static GamePanel instance;
-    public static GamePanel Instance => instance;
-    private GamePanel() { }
-
-    //分数
-    public Text txtScore;
-
-    public Image imgPlayerHp;
-    private float nowPlayerHpWidth;
-    private float maxPlayerHpWidth = 500f;
-
-    //怪物血条
-    public Slider sliderMonsterHp;
-    //怪物血条2秒隐藏协程
-    private Coroutine hideCoroutine;
-    //怪物位置
-    public Transform monsterPos;
     //血条位置偏移
     public Vector3 offset;
     //当前屏幕上怪物血条应处位置
     [SerializeField]
     private Vector3 localPos;
 
-    //游戏是否结束
-    public static bool isOver;
     //玩家
     public Player player;
     //怪物
     public Monster monster;
     //通关点
     public CheckPoint checkPoint;
-    //暂停委托
-    public UnityAction actionPause;
+    //是否暂停
+    private bool isPause;
 
-    private void Awake()
+    protected override void Awake()
     {
-        instance = this;
-        //加载分数
-        txtScore.text = DataMgr.Instance.score.ToString();
-        //隐藏怪物血条
-        sliderMonsterHp.gameObject.SetActive(false);
-        //默认未通关
-        isOver = false;
-        //注册玩家回血
-        player.actionAddHp += UpdatePlayerHp;
-        //注册玩家受伤
-        player.actionWound += UpdatePlayerHp;
-        //注册玩家死亡
-        player.actionDead += Pass;
-        //注册怪物受伤
-        monster.actionWound += UpdateMonsterHp;
-        //注册怪物死亡
-        monster.actionDead += UpdateScore;
-        //注册通关
-        checkPoint.actionPass += Pass;
+        base.Awake();
+        monster = GameObject.Find("Monster").GetComponent<Monster>();
+        //添加玩家血条变化委托
+        EventCenter.Instance.AddEventListener<float>(E_EventType.E_Player_HpChange, ChangePlayerHp);
+        //添加怪物血条变化委托
+        EventCenter.Instance.AddEventListener<float>(E_EventType.E_Monster_HpChange, ChangeMonsterHp);
+        //添加开启暂停菜单委托
+        EventCenter.Instance.AddEventListener(E_EventType.E_Pause_Menu, PauseMenu);
+        //打开输入管理器
+        InputMgr.Instance.StartOrCloseInputMgr(true);
+        //添加打开暂停界面按键信息
+        InputMgr.Instance.ChangeKeyboardInfo(E_EventType.E_Pause_Menu, KeyCode.Escape, InputInfo.E_InputType.Down);
+        //默认不暂停
+        isPause = false;
+
     }
 
     // Start is called before the first frame update
@@ -70,32 +48,85 @@ public class GamePanel : MonoBehaviour
     {
         //鼠标锁定
         Cursor.lockState = CursorLockMode.Locked;
-        //改变背景音乐
-        MusicMgr.Instance.audioSource.clip = Resources.Load<AudioClip>("Music/celestial-wanderer-i-391268");
-        MusicMgr.Instance.audioSource.Play();
+        
+    }
+    /// <summary>
+    /// 改变玩家血条委托
+    /// </summary>
+    /// <param name="hp"></param>
+    private void ChangePlayerHp(float hp)
+    {
+        GetControl<Slider>("sliderHp").value = hp;
+    }
+    /// <summary>
+    /// 改变怪物血条委托
+    /// </summary>
+    /// <param name="hp"></param>
+    private void ChangeMonsterHp(float hp)
+    {
+        Slider sliderMonsterHp = GetControl<Slider>("sliderMonsterHp");
+        sliderMonsterHp.value = hp;
+        sliderMonsterHp.gameObject.SetActive(true);
+        
+        TimerMgr.Instance.CreateTimer(false, 2000, () =>
+        {
+            sliderMonsterHp.gameObject.SetActive(false);
+        });
+
+    }
+    /// <summary>
+    /// 打开暂停界面委托
+    /// </summary>
+    private void PauseMenu()
+    {
+        if (!isPause)
+        {
+            UIMgr.Instance.ShowPanel<TipPanel>(E_UILayer.Middle, (panel) =>
+            {
+                panel.GetControl<TextMeshProUGUI>("txtTip").text = "游戏暂停";
+                panel.GetControl<TextMeshProUGUI>("txtBtn").text = "游戏继续";
+                panel.GetControl<Button>("btnSetting").gameObject.SetActive(true);
+                panel.GetControl<Button>("btnBag").gameObject.SetActive(true);
+                PauseStart(true);
+            });
+        }
+    }
+    /// <summary>
+    /// 暂停开始游戏
+    /// </summary>
+    /// <param name="isPause"></param>
+    public void PauseStart(bool isPause)
+    {
+        this.isPause = isPause;
+    }
+
+    private void OnDestroy()
+    {
+        //删除玩家血条变化委托
+        EventCenter.Instance.RemoveEventListener<float>(E_EventType.E_Player_HpChange, ChangePlayerHp);
+        //删除怪物血条变化委托
+        EventCenter.Instance.RemoveEventListener<float>(E_EventType.E_Monster_HpChange, ChangeMonsterHp);
+        //删除开启暂停菜单委托
+        EventCenter.Instance.RemoveEventListener(E_EventType.E_Pause_Menu, PauseMenu);
     }
 
     // Update is called once per frame
     void Update()
     {
-        //怪物未死亡，血条跟随
-        if (monsterPos != null)
-        {
-            localPos = Camera.main.WorldToScreenPoint(monsterPos.position+ offset);
-            localPos.x = localPos.x * 1920 / Screen.width;
-            localPos.y = localPos.y * 1080 / Screen.height;
 
-            (sliderMonsterHp.transform as RectTransform).localPosition = localPos;
-        }
-        //暂停面板
-        if (Input.GetKeyDown(KeyCode.Escape) && player.canControl && !isOver) 
-        {
-            player.canControl = false;
-            actionPause?.Invoke();
-            Time.timeScale = 0;
-            Cursor.lockState = CursorLockMode.None;
+        if (monster == null)
+            return;
+        //怪物血条跟随
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(monster.transform.position + offset);
 
-        }
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            UIMgr.Instance.uiCanvas.transform as RectTransform,
+            screenPos,
+            UIMgr.Instance.uiCanvas.worldCamera,
+            out Vector2 localPos);
+        (GetControl<Slider>("sliderMonsterHp").transform as RectTransform).localPosition = localPos;
+
+        //}
         //按F12清空存档
         //if (Input.GetKeyDown(KeyCode.T)) 
         //{
@@ -105,60 +136,16 @@ public class GamePanel : MonoBehaviour
         //}
     }
 
-    /// <summary>
-    /// 更新分数
-    /// </summary>
-    public void UpdateScore()
+
+    public override void ShowMe()
     {
-        txtScore.text = (int.Parse(txtScore.text) + 1).ToString();
-        DataMgr.Instance.SaveScore(int.Parse(txtScore.text));
+        //隐藏怪物血条
+        GetControl<Slider>("sliderMonsterHp").gameObject.SetActive(false);
+        EventCenter.Instance.EventTrigger<float>(E_EventType.E_Player_HpChange, 1);
     }
 
-    /// <summary>
-    /// 更新玩家血条
-    /// </summary>
-    /// <param name="hp">玩家当前血量</param>
-    /// <param name="maxHp">玩家最大血量</param>
-    public void UpdatePlayerHp(int hp, int maxHp)
+    public override void HideMe()
     {
-        nowPlayerHpWidth = hp * maxPlayerHpWidth / maxHp;
-        imgPlayerHp.rectTransform.sizeDelta = new Vector2(nowPlayerHpWidth, imgPlayerHp.rectTransform.sizeDelta.y);
-    }
-
-    /// <summary>
-    /// 更新怪物血条
-    /// </summary>
-    /// <param name="hp">怪物当前血量</param>
-    /// <param name="maxHp">怪物最大血量</param>
-    public void UpdateMonsterHp(int hp, int maxHp)
-    {
-        ShowMonsterHp();
-        sliderMonsterHp.value = (float)hp / maxHp;
-    }
-
-    /// <summary>
-    /// 通关或失败
-    /// </summary>
-    public void Pass()
-    {
-        isOver = true;
-    }
-
-    /// <summary>
-    /// 协程计时，攻击怪物血条显示2秒
-    /// </summary>
-    public void ShowMonsterHp()
-    {
-        sliderMonsterHp.gameObject.SetActive(true);
-        if (hideCoroutine != null)
-            StopCoroutine(hideCoroutine);
-
-        hideCoroutine = StartCoroutine(HideAfterDelay(2f));
-    }
-
-    IEnumerator HideAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        sliderMonsterHp.gameObject.SetActive(false);
+        
     }
 }

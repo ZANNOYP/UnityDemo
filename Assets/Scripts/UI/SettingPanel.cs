@@ -1,110 +1,92 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 /// <summary>
 /// 设置面板
 /// </summary>
-public class SettingPanel : MonoBehaviour
+public class SettingPanel : BasePanel
 {
-    private static SettingPanel instance;
-    public static SettingPanel Instance => instance;
-    private SettingPanel() { }
-
-    //音量滑动条
-    public Slider sliderMusic;
-    //音效滑动条
-    public Slider sliderSound;
-    //音量关闭
-    public Button btnChooseMusic;
-    //音量开启
-    public Button btnChooseMusicBK;
-    //音效关闭
-    public Button btnChooseSound;
-    //音效开启
-    public Button btnChooseSoundBK;
-    //界面关闭
-    public Button btnClose;
-
-    private void Awake()
+    protected override void Awake()
     {
-        instance = this;
+        base.Awake();
+
     }
+    /// <summary>
+    /// 按钮点击委托
+    /// </summary>
+    /// <param name="btnName"></param>
+    protected override void ClickBtn(string btnName)
+    {
+        //按钮音效
+        MusicMgr.Instance.PlaySound("Button");
+        switch (btnName)
+        {
+            //关闭按钮 隐藏自己 显示开始界面
+            case "btnClose":
+                UIMgr.Instance.HidePanel<SettingPanel>();
+                if (SceneManager.GetActiveScene().name == "GameScene") 
+                    UIMgr.Instance.ShowPanel<TipPanel>();
+                break;
+        }
+    }
+    /// <summary>
+    /// 滑动条值变化委托
+    /// </summary>
+    /// <param name="sliderName"></param>
+    /// <param name="value"></param>
+    protected override void SliderValueChange(string sliderName, float value)
+    {
+        //按钮音效
+        MusicMgr.Instance.PlaySound("Button");
+        //如果是背景音乐的滑动条 改变滑动条时 也同时改变音乐管理器里存储的音量大小
+        if (sliderName == "sliderMusic")
+        {
+            MusicMgr.Instance.ChangeBKMusicValue(value);
+        }
+        //如果是音效的滑动条 则改变音乐管理器里 音效大小
+        else if (sliderName == "sliderSound")
+        {
+            MusicMgr.Instance.ChangeSoundValue(value);
+        }
+
+    }
+    /// <summary>
+    /// 多选框值改变委托
+    /// </summary>
+    /// <param name="toggleName"></param>
+    /// <param name="value"></param>
+    protected override void ToggleValueChange(string toggleName, bool value)
+    {
+        //按钮音效
+        MusicMgr.Instance.PlaySound("Button");
+        //如果是音乐开关 改变音乐管理器里 存储的背景音乐是否开启
+        if (toggleName == "togMusic")
+        {
+            MusicMgr.Instance.ChangeBKMusic(value);
+            //根据多选框的值 决定播放或暂停音乐
+            if (value)
+            {
+                if (SceneManager.GetActiveScene().name == "BeginScene")
+                    MusicMgr.Instance.PlayBKMusic("Begin");
+                else
+                    MusicMgr.Instance.PlayBKMusic("Game");
+            }
+            else
+                MusicMgr.Instance.PauseBKMusic();
+        }
+        //音效开关 则播放或暂停音效
+        else if (toggleName == "togSound")
+        {
+            MusicMgr.Instance.PlayOrPauseSound(value);
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        //音量滑动条
-        sliderMusic.onValueChanged.AddListener((v) =>
-        {
-            //按钮点击音效
-            Instantiate(Resources.Load<GameObject>("Sound/btnSound"));
-            //改变背景音乐大小
-            MusicMgr.Instance.audioSource.volume = v;
-        });
-        //音效滑动条
-        sliderSound.onValueChanged.AddListener((v) =>
-        {
-            //按钮点击音效
-            Instantiate(Resources.Load<GameObject>("Sound/btnSound"));
-        });
-        //音量关闭
-        btnChooseMusic.onClick.AddListener(() =>
-        {
-            //按钮点击音效
-            Instantiate(Resources.Load<GameObject>("Sound/btnSound"));
-            //隐藏图标
-            btnChooseMusic.gameObject.SetActive(false);
-            //背景音乐禁音
-            MusicMgr.Instance.audioSource.mute = true;
-        });
-        //音效关闭
-        btnChooseSound.onClick.AddListener(() =>
-        {
-            //按钮点击音效
-            Instantiate(Resources.Load<GameObject>("Sound/btnSound"));
-            //显示图标
-            btnChooseSound.gameObject.SetActive(false);
-        });
-        //音量开启
-        btnChooseMusicBK.onClick.AddListener(() =>
-        {
-            //按钮点击音效
-            Instantiate(Resources.Load<GameObject>("Sound/btnSound"));
-            //显示图标
-            btnChooseMusic.gameObject.SetActive(true);
-            //取消禁音
-            MusicMgr.Instance.audioSource.mute = false;
-        });
-        //音量关闭
-        btnChooseSoundBK.onClick.AddListener(() =>
-        {
-            //按钮点击音效
-            Instantiate(Resources.Load<GameObject>("Sound/btnSound"));
-            //隐藏图标
-            btnChooseSound.gameObject.SetActive(true);
-        });
-        //界面关闭
-        btnClose.onClick.AddListener(() =>
-        {
-            //按钮点击音效
-            Instantiate(Resources.Load<GameObject>("Sound/btnSound"));
-            //隐藏
-            Hide();
-            //保存音量数据
-            DataMgr.Instance.SaveMusic(!MusicMgr.Instance.audioSource.mute, MusicMgr.Instance.audioSource.volume);
-            //保存音效数据
-            DataMgr.Instance.SaveSound(btnChooseSound.gameObject.activeSelf, sliderSound.value);
-        });
-        //初始化音量滑动条位置
-        sliderMusic.SetValueWithoutNotify(MusicMgr.Instance.audioSource.volume);
-        //初始化音量开关图标显隐
-        btnChooseMusic.gameObject.SetActive(!MusicMgr.Instance.audioSource.mute);
-        //初始化音效滑动条位置
-        sliderSound.SetValueWithoutNotify(DataMgr.Instance.musicData.soundVolume);
-        //初始化音效开关图标显隐
-        btnChooseSound.gameObject.SetActive(DataMgr.Instance.musicData.soundOpen);
-        //初始隐藏
-        Hide();
+        
     }
 
     // Update is called once per frame
@@ -112,18 +94,22 @@ public class SettingPanel : MonoBehaviour
     {
         
     }
-    /// <summary>
-    /// 显示面板
-    /// </summary>
-    public void Show()
+    
+
+    public override void ShowMe()
     {
-        gameObject.SetActive(true);
+        //显示设置面板时 初始化滑动条、多选框状态
+        MusicData musicData = MusicMgr.Instance.GetData();
+        GetControl<Toggle>("togMusic").SetIsOnWithoutNotify(musicData.musicOpen);
+        GetControl<Toggle>("togSound").SetIsOnWithoutNotify(musicData.soundOpen);
+        GetControl<Slider>("sliderMusic").SetValueWithoutNotify(musicData.musicVolume);
+        GetControl<Slider>("sliderSound").SetValueWithoutNotify(musicData.soundVolume);
     }
-    /// <summary>
-    /// 隐藏面板
-    /// </summary>
-    public void Hide()
+
+    public override void HideMe()
     {
-        gameObject.SetActive(false);
+        //隐藏面板时 将音乐管理器中 的数据存储到本地
+        MusicData musicData = MusicMgr.Instance.GetData();
+        DataMgr.Instance.SaveMusic(musicData);
     }
 }

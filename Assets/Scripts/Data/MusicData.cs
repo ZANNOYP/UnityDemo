@@ -15,4 +15,12 @@ public class MusicData
     //“Ù–ß¥Û–°
     public float soundVolume;
 
+
+    public void Init(bool musicOpen, bool soundOpen, float musicVolume, float soundVolume)
+    {
+        this.musicOpen = musicOpen;
+        this.soundOpen = soundOpen;
+        this.musicVolume = musicVolume;
+        this.soundVolume = soundVolume;
+    }
 }

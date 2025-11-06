@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class CheckPoint : MonoBehaviour
 {
-    //通关委托
-    public UnityAction actionPass;
     // Start is called before the first frame update
     void Start()
     {
@@ -28,11 +28,13 @@ public class CheckPoint : MonoBehaviour
             if (p != null)
             {
                 //通关
-                actionPass?.Invoke();
-                //时间暂停
-                Time.timeScale = 0;
-                //鼠标解锁
-                Cursor.lockState = CursorLockMode.None;
+                UIMgr.Instance.ShowPanel<TipPanel>(E_UILayer.Middle, (panel) =>
+                {
+                    panel.GetControl<TextMeshProUGUI>("txtTip").text = "恭喜过关";
+                    panel.GetControl<TextMeshProUGUI>("txtBtn").text = "返回主菜单";
+                    panel.GetControl<Button>("btnSetting").gameObject.SetActive(false);
+                    panel.GetControl<Button>("btnBag").gameObject.SetActive(false);
+                });
                 
             }
         }

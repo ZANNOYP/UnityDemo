@@ -28,7 +28,9 @@ public class CameraController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        Vector3 dir = target.transform.forward;
+        yaw = target.transform.eulerAngles.y;
+        pitch = 5f;
     }
 
     // Update is called once per frame
@@ -50,6 +52,12 @@ public class CameraController : MonoBehaviour
         rotation = Quaternion.Euler(pitch, yaw, 0);
         //摄像机看向位置
         position = target.transform.position + rotation * new Vector3(0, offsetY, offsetZ);
+
+        RaycastHit hit;
+        if (Physics.Linecast(target.transform.position, position, out hit, LayerMask.GetMask("Wall"))) 
+        {
+            position = hit.point + hit.normal * 0.2f;
+        }
         //设置摄像机位置
         transform.position = position;
         transform.LookAt(target.transform.position);

@@ -4,18 +4,13 @@ using UnityEngine;
 /// <summary>
 /// 数据管理类
 /// </summary>
-public class DataMgr
+public class DataMgr : BaseManager<DataMgr>
 {
-    private static DataMgr instance = new DataMgr();
-    public static DataMgr Instance => instance;
+    
     private DataMgr() 
     {
-        score = PlayerPrefs.GetInt("score", 0);
-        musicData = new MusicData();
-        musicData.musicOpen = PlayerPrefs.GetInt("musicOpen", 1) == 1 ? true : false;
-        musicData.musicVolume = PlayerPrefs.GetFloat("musicVolume", 0.5f);
-        musicData.soundOpen = PlayerPrefs.GetInt("soundOpen", 1) == 1 ? true : false;
-        musicData.soundVolume = PlayerPrefs.GetFloat("soundVolume", 0.5f);
+        LoadMusic();
+
     }
 
     //分数
@@ -46,4 +41,19 @@ public class DataMgr
         PlayerPrefs.SetFloat("soundVolume", volume);
         PlayerPrefs.Save();
     }
+
+    public void LoadMusic()
+    {
+        musicData = PlayerPrefsDataMgr.Instance.LoadData(typeof(MusicData), "musicData") as MusicData;
+        if (!musicData.musicOpen && !musicData.soundOpen && musicData.musicVolume == 0 && musicData.soundVolume == 0) 
+        {
+            musicData.Init(true, true, 0.3f, 0.3f);
+        }
+    }
+
+    public void SaveMusic(MusicData data)
+    {
+        PlayerPrefsDataMgr.Instance.SaveData(data, "musicData");
+    }
+
 }

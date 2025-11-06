@@ -1,0 +1,26 @@
+ManifestFileVersion: 0
+CRC: 1239938324
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: b88d2cd54e5b2bf9ce266db4971d62f5
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 9a2ca7bdbd1871f7131daf57de908e0c
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: b88d2cd54e5b2bf9ce266db4971d62f5
+HashAppended: 0
+ClassTypes:
+- Class: 83
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Editor/ArtRes/sound/FootStep.mp3
+- Assets/Editor/ArtRes/sound/Sword.mp3
+- Assets/Editor/ArtRes/sound/Shield.mp3
+- Assets/Editor/ArtRes/sound/Hit.mp3
+- Assets/Editor/ArtRes/sound/OpenDoor.mp3
+- Assets/Editor/ArtRes/sound/SwordBody.mp3
+- Assets/Editor/ArtRes/sound/Button.mp3
+Dependencies: []

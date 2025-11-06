@@ -119,4 +119,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roundSpeed: 100
-  player: {fileID: 0}
+  door: {fileID: 0}
+  keyItem: {fileID: 11400000, guid: 1ddcc736772c53743a0cd73ff72e3f12, type: 2}
+  count: 1
