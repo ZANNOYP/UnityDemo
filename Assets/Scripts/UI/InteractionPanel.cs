@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 /// <summary>
@@ -21,6 +22,14 @@ public class InteractionPanel : BasePanel
     void Update()
     {
         
+    }
+    /// <summary>
+    /// 设置面板信息
+    /// </summary>
+    /// <param name="txtInteraction"></param>
+    public void SetInfo(string txtInteraction)
+    {
+        GetControl<TextMeshProUGUI>("txtInteraction").text = txtInteraction;
     }
 
     public override void ShowMe()

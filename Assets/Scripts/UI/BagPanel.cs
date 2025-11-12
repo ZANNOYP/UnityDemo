@@ -21,6 +21,8 @@ public class BagPanel : BasePanel
 
     protected override void ClickBtn(string btnName)
     {
+        //按钮音效
+        MusicMgr.Instance.PlaySound("Button");
         //关闭按钮
         if (btnName == "btnClose")
         {
@@ -36,15 +38,12 @@ public class BagPanel : BasePanel
                 Time.timeScale = 1f;
                 Cursor.lockState = CursorLockMode.Locked;
             }
-            //如果玩家原理门 打开暂停面板
+            //如果玩家远离门 打开暂停面板
             else
             {
                 UIMgr.Instance.ShowPanel<TipPanel>(E_UILayer.Middle, (panel) =>
                 {
-                    panel.GetControl<TextMeshProUGUI>("txtTip").text = "游戏暂停";
-                    panel.GetControl<TextMeshProUGUI>("txtBtn").text = "游戏继续";
-                    panel.GetControl<Button>("btnSetting").gameObject.SetActive(true);
-                    panel.GetControl<Button>("btnBag").gameObject.SetActive(true);
+                    panel.SetInfo("游戏暂停", "游戏继续");
                 });
             }
             
@@ -132,6 +131,7 @@ public class BagPanel : BasePanel
     public override void ShowMe()
     {
         UpdateBag();
+        
     }
 
     public override void HideMe()

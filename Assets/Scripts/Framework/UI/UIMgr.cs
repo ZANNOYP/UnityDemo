@@ -163,6 +163,11 @@ public class UIMgr : BaseManager<UIMgr>
         //不存在面板 加载面板
         ABResMgr.Instance.LoadResAsync<GameObject>("ui", panelName, (res) =>
         {
+            if (res == null)
+            {
+                Debug.LogError($"[UIMgr] 加载UI失败！abName=ui, resName={panelName}");
+                return;
+            }
             //取出字典中已经占好位置的数据
             PanelInfo<T> panelInfo = panelDic[panelName] as PanelInfo<T>;
             //表示异步加载结束前 就想要隐藏该面板了 

@@ -8,6 +8,9 @@ using UnityEngine.UI;
 /// </summary>
 public class BeginPanel : BasePanel
 {
+    private CanvasGroup canvasGroup;
+    private bool isShow;
+
     //重写按钮点击逻辑
     protected override void ClickBtn(string btnName)
     {
@@ -51,7 +54,8 @@ public class BeginPanel : BasePanel
     protected override void Awake()
     {
         base.Awake();
-
+        canvasGroup = GetComponent<CanvasGroup>();
+        isShow = false;
     }
 
     // Start is called before the first frame update
@@ -63,7 +67,18 @@ public class BeginPanel : BasePanel
     // Update is called once per frame
     void Update()
     {
-        
+        if (isShow)
+        {
+            canvasGroup.alpha += Time.deltaTime;
+            if (canvasGroup.alpha > 1) 
+                canvasGroup.alpha = 1;
+        }
+        else
+        {
+            canvasGroup.alpha -= Time.deltaTime;
+            if (canvasGroup.alpha < 0)
+                canvasGroup.alpha = 0;
+        }
     }
 
     public override void ShowMe()
@@ -72,10 +87,14 @@ public class BeginPanel : BasePanel
         Time.timeScale = 1;
         //鼠标解锁
         Cursor.lockState = CursorLockMode.None;
+
+        canvasGroup.alpha = 0;
+        isShow = true;
     }
 
     public override void HideMe()
     {
-
+        canvasGroup.alpha = 1;
+        isShow = false;
     }
 }

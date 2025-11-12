@@ -11,6 +11,10 @@ public class TipPanel : BasePanel
 {
     //玩家
     private Player player;
+    ////物品拾取信息位置
+    //private Vector3 itemPos;
+    ////物品拾取信息x
+    //private float x;
 
     protected override void Awake()
     {
@@ -26,7 +30,9 @@ public class TipPanel : BasePanel
     // Update is called once per frame
     void Update()
     {
-        
+        //x = Mathf.Lerp(x, 260, Time.deltaTime * 5);
+        //itemPos.x = x;
+        //GetControl<Image>("Item").rectTransform.localPosition = itemPos;
     }
 
     protected override void ClickBtn(string btnName)
@@ -40,16 +46,17 @@ public class TipPanel : BasePanel
                 //切回开始场景
                 if (GetControl<TextMeshProUGUI>("txtBtn").text == "返回主菜单")
                 {
-                    SceneManager.LoadScene("BeginScene");
                     MusicMgr.Instance.ClearSound();
                     PoolMgr.Instance.ClearPool();
+                    InventoryMgr.Instance.Clear();
+                    SceneManager.LoadScene("BeginScene");
                     UIMgr.Instance.HidePanel<GamePanel>(true);
                     UIMgr.Instance.HidePanel<InteractionPanel>(true);
                     UIMgr.Instance.HidePanel<TipPanel>(true);
                     UIMgr.Instance.HidePanel<BagItemPanel>(true);
                     UIMgr.Instance.HidePanel<BagPanel>(true);
                     UIMgr.Instance.HidePanel<ItemPanel>(true);
-                    UIMgr.Instance.ShowPanel<BeginPanel>(E_UILayer.Bottom);
+                    Main.Instance.InitBeginScene();
                 }
                 else if (GetControl<TextMeshProUGUI>("txtBtn").text == "确定")
                 {
@@ -83,15 +90,15 @@ public class TipPanel : BasePanel
                 }
                 else if (GetControl<TextMeshProUGUI>("txtBtn").text == "游戏继续")
                 {
-                    
+                    Time.timeScale = 1f;
+                    Cursor.lockState = CursorLockMode.Locked;
                 }
                 player.canControl = true;
                 UIMgr.Instance.GetPanel<GamePanel>((panel) =>
                 {
                     panel.PauseStart(false);
                 });
-                Time.timeScale = 1f;
-                Cursor.lockState = CursorLockMode.Locked;
+                
                 break;
             //设置按钮
             case "btnSetting":
@@ -105,6 +112,20 @@ public class TipPanel : BasePanel
                 break;
         }
     }
+    /// <summary>
+    /// 设置面板信息
+    /// </summary>
+    /// <param name="txtTip"></param>
+    /// <param name="txtBtn"></param>
+    /// <param name="settingActive"></param>
+    /// <param name="bagActive"></param>
+    public void SetInfo(string txtTip, string txtBtn, bool settingActive = true, bool bagActive = true)
+    {
+        GetControl<TextMeshProUGUI>("txtTip").text = txtTip;
+        GetControl<TextMeshProUGUI>("txtBtn").text = txtBtn;
+        GetControl<Button>("btnSetting").gameObject.SetActive(settingActive);
+        GetControl<Button>("btnBag").gameObject.SetActive(bagActive);
+    }
 
     public override void ShowMe()
     {
@@ -112,6 +133,12 @@ public class TipPanel : BasePanel
         Time.timeScale = 0;
         Cursor.lockState = CursorLockMode.None;
         player.canControl = false;
+
+        ////初始化x
+        //x = 780;
+        ////初始化ui位置
+        //itemPos = new Vector3(x, GetControl<Image>("Item").rectTransform.localPosition.y, GetControl<Image>("Item").rectTransform.localPosition.z);
+        //GetControl<Image>("Item").rectTransform.localPosition = itemPos;
     }
 
     public override void HideMe()

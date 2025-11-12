@@ -22,6 +22,8 @@ public class Weapon : MonoBehaviour
     public WeaponItem weaponItem;
     //武器数量
     public int count;
+
+    private Player player;
     // Start is called before the first frame update
     void Start()
     {
@@ -43,22 +45,32 @@ public class Weapon : MonoBehaviour
         //显示物品拾取信息面板
         UIMgr.Instance.ShowPanel<ItemPanel>(E_UILayer.Bottom, (panel) =>
         {
-            //设置图片
-            panel.GetControl<Image>("imgItem").sprite = weaponItem.sprite;
-            //设置名字
-            panel.GetControl<TextMeshProUGUI>("txtItemName").text = weaponItem.itemName;
-            //设置数量
-            panel.GetControl<TextMeshProUGUI>("txtItemNum").text = "x" + count;
+            //改变面板信息
+            panel.SetInfo(weaponItem.sprite, weaponItem.itemName, count);
             //将物品添加至背包列表容器
             InventoryMgr.Instance.AddItem(weaponItem, count);
             //销毁自己
             Destroy(this.gameObject);
-
-            //2s后隐藏
-            TimerMgr.Instance.CreateTimer(false, 2000, () =>
-            {
-                UIMgr.Instance.HidePanel<ItemPanel>();
-            });
         });
+    }
+
+    public void WearWeapon()
+    {
+        player = GameObject.Find("Player").GetComponent<Player>();
+        weaponLeftPos = GameObject.Find("shield").GetComponent<Transform>();
+        weaponRightPos = GameObject.Find("weapon").GetComponent<Transform>();
+        if (weaponLeftPos != null)
+        {
+            weaponLeft.SetParent(weaponLeftPos);
+            weaponLeft.localPosition = Vector3.zero;
+            weaponLeft.localEulerAngles = Vector3.zero;
+        }
+        weaponRight.SetParent(weaponRightPos);
+        weaponRight.localPosition = Vector3.zero;
+        weaponRight.localEulerAngles = Vector3.zero;
+        Destroy(this.gameObject);
+        //改变玩家攻击类型
+        player.atkType = AtkType.ShortSword;
+        player.animator.SetLayerWeight(1, 1);
     }
 }

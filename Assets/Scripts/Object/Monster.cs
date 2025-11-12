@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.XR;
+using UnityEngine.UI;
 /// <summary>
 /// 怪物状态枚举
 /// </summary>
@@ -25,8 +26,12 @@ public class Monster : MonoBehaviour
     public GameObject player;
     //怪物血量
     [SerializeField]
-    private int hp;
+    private int currentHp;
     private int maxHp = 3;
+    private Slider hpSlider;
+    public Vector3 hpBarOffset = new Vector3(0, 2, 0);
+    private Transform hpBarTransform;
+    public GameObject hpBarPrefab;
 
     //怪物移动方向
     [SerializeField]
@@ -85,18 +90,25 @@ public class Monster : MonoBehaviour
 
     private NavMeshAgent agent;
 
+    public string path;
+
     // Start is called before the first frame update
     void Start()
     {
         state = State.Idle;
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
-        hp = maxHp;
 
         agent = GetComponent<NavMeshAgent>();
         agent.updatePosition = true; // 必须为 true
         agent.updateRotation = true; // 自动朝向移动方向
-        
+
+        currentHp = maxHp;
+        GameObject hpObj = Instantiate(hpBarPrefab);
+        hpBarTransform = hpObj.transform;
+        hpSlider = hpObj.GetComponent<Slider>();
+        hpBarTransform.SetParent(GameObject.Find("WorldUI").transform, false);
+        hpSlider.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -126,6 +138,12 @@ public class Monster : MonoBehaviour
                 Dead();
                 break;
         }
+
+        if (hpBarTransform == null)
+            return;
+        hpBarTransform.position = transform.position + hpBarOffset;
+        Camera cam = Camera.main;
+        hpBarTransform.LookAt(hpBarTransform.position + cam.transform.rotation * Vector3.forward, cam.transform.rotation * Vector3.up);
     }
 
     /// <summary>
@@ -134,15 +152,25 @@ public class Monster : MonoBehaviour
     public void Wound()
     {
         //血量-1
-        hp--;
+        currentHp--;
         //游戏界面更新血条
-        EventCenter.Instance.EventTrigger<float>(E_EventType.E_Monster_HpChange, (float)hp / maxHp);
-        if (hp <= 0)
+        //EventCenter.Instance.EventTrigger<float>(E_EventType.E_Monster_HpChange, (float)currentHp / maxHp);
+        hpSlider.value = (float)currentHp / maxHp;
+        if (currentHp <= 0)
         {
             //死亡
             state = State.Dead;
 
         }
+        StopAllCoroutines();
+        StartCoroutine(HideHp());
+    }
+
+    private IEnumerator HideHp()
+    {
+        hpSlider.gameObject.SetActive(true);
+        yield return new WaitForSeconds(3f);
+        hpSlider.gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -160,10 +188,12 @@ public class Monster : MonoBehaviour
     {
         //销毁自己
         Destroy(gameObject, 1f);
-        //生成血包
-        Instantiate(Resources.Load<GameObject>("Hp"), transform.position + Vector3.up * 0.5f - transform.forward * 0.5f + transform.right, Quaternion.identity);
+
+        Destroy(hpSlider.gameObject);
+        //生成掉落物
+        Instantiate(Resources.Load<GameObject>(path), transform.position + Vector3.up * 0.5f - transform.forward * 0.5f , Quaternion.identity);
         //生成钥匙
-        Key k = Instantiate(Resources.Load<GameObject>("Key"), transform.position + Vector3.up * 0.5f - Vector3.forward * 0.5f - transform.right, Quaternion.identity).GetComponent<Key>();
+        //Key k = Instantiate(Resources.Load<GameObject>("Key"), transform.position + Vector3.up * 0.5f - Vector3.forward * 0.5f - transform.right, Quaternion.identity).GetComponent<Key>();
         //将钥匙与门绑定
         //k.door = this.door;
     }

@@ -23,6 +23,8 @@ public class GamePanel : BasePanel
     public CheckPoint checkPoint;
     //是否暂停
     private bool isPause;
+    //隐藏怪物血条协程
+    private Coroutine hideMonsterHp;
 
     protected override void Awake()
     {
@@ -31,7 +33,7 @@ public class GamePanel : BasePanel
         //添加玩家血条变化委托
         EventCenter.Instance.AddEventListener<float>(E_EventType.E_Player_HpChange, ChangePlayerHp);
         //添加怪物血条变化委托
-        EventCenter.Instance.AddEventListener<float>(E_EventType.E_Monster_HpChange, ChangeMonsterHp);
+        //EventCenter.Instance.AddEventListener<float>(E_EventType.E_Monster_HpChange, ChangeMonsterHp);
         //添加开启暂停菜单委托
         EventCenter.Instance.AddEventListener(E_EventType.E_Pause_Menu, PauseMenu);
         //打开输入管理器
@@ -67,11 +69,10 @@ public class GamePanel : BasePanel
         Slider sliderMonsterHp = GetControl<Slider>("sliderMonsterHp");
         sliderMonsterHp.value = hp;
         sliderMonsterHp.gameObject.SetActive(true);
-        
-        TimerMgr.Instance.CreateTimer(false, 2000, () =>
-        {
-            sliderMonsterHp.gameObject.SetActive(false);
-        });
+        //开启怪物血条延迟隐藏协程
+        if (hideMonsterHp != null) 
+            StopCoroutine(hideMonsterHp);
+        hideMonsterHp = StartCoroutine(HideMonsterHp(2f));
 
     }
     /// <summary>
@@ -83,10 +84,7 @@ public class GamePanel : BasePanel
         {
             UIMgr.Instance.ShowPanel<TipPanel>(E_UILayer.Middle, (panel) =>
             {
-                panel.GetControl<TextMeshProUGUI>("txtTip").text = "游戏暂停";
-                panel.GetControl<TextMeshProUGUI>("txtBtn").text = "游戏继续";
-                panel.GetControl<Button>("btnSetting").gameObject.SetActive(true);
-                panel.GetControl<Button>("btnBag").gameObject.SetActive(true);
+                panel.SetInfo("游戏暂停", "游戏继续");
                 PauseStart(true);
             });
         }
@@ -105,7 +103,7 @@ public class GamePanel : BasePanel
         //删除玩家血条变化委托
         EventCenter.Instance.RemoveEventListener<float>(E_EventType.E_Player_HpChange, ChangePlayerHp);
         //删除怪物血条变化委托
-        EventCenter.Instance.RemoveEventListener<float>(E_EventType.E_Monster_HpChange, ChangeMonsterHp);
+        //EventCenter.Instance.RemoveEventListener<float>(E_EventType.E_Monster_HpChange, ChangeMonsterHp);
         //删除开启暂停菜单委托
         EventCenter.Instance.RemoveEventListener(E_EventType.E_Pause_Menu, PauseMenu);
     }
@@ -136,6 +134,16 @@ public class GamePanel : BasePanel
         //}
     }
 
+    /// <summary>
+    /// 怪物血条延迟隐藏协程
+    /// </summary>
+    /// <param name="sec"></param>
+    /// <returns></returns>
+    private IEnumerator HideMonsterHp(float sec)
+    {
+        yield return new WaitForSeconds(sec);
+        GetControl<Slider>("sliderMonsterHp").gameObject.SetActive(false);
+    }
 
     public override void ShowMe()
     {

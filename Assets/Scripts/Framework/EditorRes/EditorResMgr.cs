@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,28 +15,65 @@ public class EditorResMgr : BaseManager<EditorResMgr>
     //用于放置需要打包进AB包中的资源路径 
     private string rootPath = "Assets/Editor/ArtRes/";
 
+    private static Dictionary<System.Type, string[]> typeToSuffix = new Dictionary<System.Type, string[]>()
+    {
+        { typeof(GameObject), new string[]{".prefab"} },
+        { typeof(Material), new string[]{".mat"} },
+        { typeof(Texture), new string[]{".png", ".jpg", ".jpeg" } },
+        { typeof(AudioClip), new string[]{".mp3", ".wav", ".ogg"} },
+        { typeof(TextAsset), new string[]{".txt", ".json"} },
+        // 可以继续添加更多类型
+    };
+
     private EditorResMgr() { }
 
-    //1.加载单个资源的
-    public T LoadEditorRes<T>(string path) where T:Object
+    public T LoadEditorRes<T>(string path) where T : Object
     {
 #if UNITY_EDITOR
-        string suffixName = "";
-        //预设体、纹理（图片）、材质球、音效等等
-        if (typeof(T) == typeof(GameObject))
-            suffixName = ".prefab";
-        else if (typeof(T) == typeof(Material))
-            suffixName = ".mat";
-        else if (typeof(T) == typeof(Texture))
-            suffixName = ".png";
-        else if (typeof(T) == typeof(AudioClip))
-            suffixName = ".mp3";
-        T res = AssetDatabase.LoadAssetAtPath<T>(rootPath + path + suffixName);
-        return res;
+        if (!typeToSuffix.TryGetValue(typeof(T), out var suffixes))
+        {
+            Debug.LogError($"[EditorResMgr] 不支持的资源类型 {typeof(T)}");
+            return null;
+        }
+
+        foreach (var suffix in suffixes)
+        {
+            T res = AssetDatabase.LoadAssetAtPath<T>(rootPath + path + suffix);
+            if (res != null)
+                return res;
+        }
+
+        Debug.LogError($"[EditorResMgr] 加载失败: {rootPath + path} (尝试后缀: {string.Join(",", suffixes)})");
+        return null;
 #else
         return null;
 #endif
     }
+
+    //    //1.加载单个资源的
+    //    public T LoadEditorRes<T>(string path) where T:Object
+    //    {
+    //#if UNITY_EDITOR
+    //        string suffixName = "";
+    //        //预设体、纹理（图片）、材质球、音效等等
+    //        if (typeof(T) == typeof(GameObject))
+    //            suffixName = ".prefab";
+    //        else if (typeof(T) == typeof(Material))
+    //            suffixName = ".mat";
+    //        else if (typeof(T) == typeof(Texture))
+    //            suffixName = ".png";
+    //        else if (typeof(T) == typeof(AudioClip))
+    //            suffixName = ".mp3";
+    //        T res = AssetDatabase.LoadAssetAtPath<T>(rootPath + path + suffixName);
+    //        if (res == null)
+    //        {
+    //            Debug.LogError($"[EditorResMgr] 加载失败: {rootPath + path + suffixName}");
+    //        }
+    //        return res;
+    //#else
+    //        return null;
+    //#endif
+    //    }
 
     //2.加载图集相关资源的
     public Sprite LoadSprite(string path, string spriteName)

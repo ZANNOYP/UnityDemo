@@ -30,10 +30,7 @@ public class CheckPoint : MonoBehaviour
                 //通关
                 UIMgr.Instance.ShowPanel<TipPanel>(E_UILayer.Middle, (panel) =>
                 {
-                    panel.GetControl<TextMeshProUGUI>("txtTip").text = "恭喜过关";
-                    panel.GetControl<TextMeshProUGUI>("txtBtn").text = "返回主菜单";
-                    panel.GetControl<Button>("btnSetting").gameObject.SetActive(false);
-                    panel.GetControl<Button>("btnBag").gameObject.SetActive(false);
+                    panel.SetInfo("恭喜过关", "返回主菜单", false, false);
                 });
                 
             }

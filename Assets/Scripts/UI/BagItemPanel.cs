@@ -10,8 +10,6 @@ public class BagItemPanel : BasePanel
 {
     //玩家
     private Player player;
-    //武器
-    private Weapon weapon;
     //面板绑定的物品信息
     private ItemInstance currentItem;
     protected override void Awake()
@@ -83,23 +81,8 @@ public class BagItemPanel : BasePanel
     {
         player.AddAtk((currentItem.item as WeaponItem).atk);
         GameObject weaponObj = Instantiate(Resources.Load<GameObject>("Weapon"));
-        weapon = weaponObj.GetComponent<Weapon>();
-        weapon.weaponLeftPos = GameObject.Find("shield").GetComponent<Transform>();
-        weapon.weaponRightPos = GameObject.Find("weapon").GetComponent<Transform>();
-        if (weapon.weaponLeftPos != null)
-        {
-            weapon.weaponLeft.SetParent(weapon.weaponLeftPos);
-            weapon.weaponLeft.localPosition = Vector3.zero;
-            weapon.weaponLeft.localEulerAngles = Vector3.zero;
-        }
-        weapon.weaponRight.SetParent(weapon.weaponRightPos);
-        weapon.weaponRight.localPosition = Vector3.zero;
-        weapon.weaponRight.localEulerAngles = Vector3.zero;
-        Destroy(weaponObj);
-        //改变玩家攻击类型
-        player.atkType = AtkType.ShortSword;
-        player.animator.SetLayerWeight(1, 1);
-
+        Weapon weapon = weaponObj.GetComponent<Weapon>();
+        weapon.WearWeapon();
         InventoryMgr.Instance.RemoveItem(currentItem.item);
     }
     /// <summary>

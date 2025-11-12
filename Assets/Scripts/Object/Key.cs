@@ -34,22 +34,13 @@ public class Key : MonoBehaviour
         //显示物品拾取信息面板
         UIMgr.Instance.ShowPanel<ItemPanel>(E_UILayer.Bottom, (panel) =>
         {
-            //设置图片
-            panel.GetControl<Image>("imgItem").sprite = keyItem.sprite;
-            //设置名字
-            panel.GetControl<TextMeshProUGUI>("txtItemName").text = keyItem.itemName;
-            //设置数量
-            panel.GetControl<TextMeshProUGUI>("txtItemNum").text = "x" + count;
+            //改变面板信息
+            panel.SetInfo(keyItem.sprite, keyItem.itemName, count);
             //将物品添加至背包列表容器
             InventoryMgr.Instance.AddItem(keyItem, count);
             //销毁自己
             Destroy(this.gameObject);
 
-            //2s后隐藏
-            TimerMgr.Instance.CreateTimer(false, 2000, () =>
-            {
-                UIMgr.Instance.HidePanel<ItemPanel>();
-            });
         });
     }
 }

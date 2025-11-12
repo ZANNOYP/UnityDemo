@@ -199,7 +199,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 23aac16464f570a4f97f7da2d5f1ca55, type: 3}
+  m_Sprite: {fileID: 21300000, guid: eceffd0ce5aa85949bd530238867e662, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -299,5 +299,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd3aacb896af22642a762ab750659d29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  txtInteraction: {fileID: 0}
-  player: {fileID: 0}

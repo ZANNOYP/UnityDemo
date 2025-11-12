@@ -70,5 +70,10 @@ public class InventoryMgr : BaseManager<InventoryMgr>
         return itemsList;
     }
 
+    public void Clear()
+    {
+        itemsList.Clear();
+        delItemsList.Clear();
+    }
   
 }

@@ -462,10 +462,7 @@ public class Player : MonoBehaviour
         InputMgr.Instance.StartOrCloseInputMgr(false);
         UIMgr.Instance.ShowPanel<TipPanel>(E_UILayer.Middle, (panel) =>
         {
-            panel.GetControl<TextMeshProUGUI>("txtTip").text = "玩家死亡 游戏结束";
-            panel.GetControl<TextMeshProUGUI>("txtBtn").text = "返回主菜单";
-            panel.GetControl<Button>("btnSetting").gameObject.SetActive(false);
-            panel.GetControl<Button>("btnBag").gameObject.SetActive(false);
+            panel.SetInfo("玩家死亡 游戏结束", "返回主菜单", false, false);
         });
     }
 
@@ -509,14 +506,19 @@ public class Player : MonoBehaviour
         {
             //得到门脚本
             Door d = collider.gameObject.GetComponent<Door>();
-            if (d != null && !d.isOpen) 
+            if (d != null && !d.isOpen)
             {
                 UIMgr.Instance.ShowPanel<InteractionPanel>(E_UILayer.Bottom, (panel) =>
                 {
-                    panel.GetControl<TextMeshProUGUI>("txtInteraction").text = "E开门";
+                    panel.SetInfo("E开门");
                 });
                 openDoor = true;
                 door = d;
+            }
+            else if (d != null && d.isOpen)
+            {
+                openDoor = false;
+                door = null;
             }
 
             //得到钥匙脚本
@@ -529,13 +531,9 @@ public class Player : MonoBehaviour
             {
                 UIMgr.Instance.ShowPanel<InteractionPanel>(E_UILayer.Bottom, (panel) =>
                 {
-                    panel.GetControl<TextMeshProUGUI>("txtInteraction").text = "E拾取";
+                    panel.SetInfo("E拾取");
                 });
             }
-
-            //VideoPlayer v = collider.gameObject.GetComponent<VideoPlayer>();
-            //if (v != null) 
-            //    v.Play();
         }
     }
 

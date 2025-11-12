@@ -1,15 +1,15 @@
 ManifestFileVersion: 0
-CRC: 1755768644
+CRC: 415980580
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: f58acec5df3fbf2698dbc20bfa382e78
+    Hash: a4ff5b01a829a26a5a71feb3307f579a
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 580be69af63eca0e12cb88e41329ca89
+    Hash: 21e510c79c3ff3b206033bf5e2192edf
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: f58acec5df3fbf2698dbc20bfa382e78
+    Hash: a4ff5b01a829a26a5a71feb3307f579a
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -21,13 +21,15 @@ ClassTypes:
 - Class: 48
   Script: {instanceID: 0}
 - Class: 114
-  Script: {fileID: 11500000, guid: 1aa08ab6e0800fa44ae55d278d1423e3, type: 3}
+  Script: {fileID: 11500000, guid: 7ca09c1e75c618940a6b96080d83a6ae, type: 3}
 - Class: 114
-  Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  Script: {fileID: 11500000, guid: 1aa08ab6e0800fa44ae55d278d1423e3, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
 - Class: 114
@@ -42,8 +44,6 @@ ClassTypes:
   Script: {fileID: 11500000, guid: a2a3c544b3985fb46843016506890d09, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: cd3aacb896af22642a762ab750659d29, type: 3}
-- Class: 114
-  Script: {fileID: 11500000, guid: 7ca09c1e75c618940a6b96080d83a6ae, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: 31a19414c41e5ae4aae2af33fee712f6, type: 3}
 - Class: 114
@@ -67,6 +67,8 @@ ClassTypes:
 - Class: 222
   Script: {instanceID: 0}
 - Class: 224
+  Script: {instanceID: 0}
+- Class: 225
   Script: {instanceID: 0}
 - Class: 687078895
   Script: {instanceID: 0}
@@ -107,8 +109,6 @@ SerializeReferenceClassIdentifiers:
   ClassName: UnityEngine.UI.Button/ButtonClickedEvent
 - AssemblyName: UnityEngine.UI
   ClassName: UnityEngine.UI.ColorBlock
-- AssemblyName: UnityEngine.UI
-  ClassName: UnityEngine.UI.FontData
 - AssemblyName: UnityEngine.UI
   ClassName: UnityEngine.UI.MaskableGraphic/CullStateChangedEvent
 - AssemblyName: UnityEngine.UI
